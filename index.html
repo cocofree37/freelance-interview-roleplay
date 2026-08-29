@@ -2,120 +2,33 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>案件面談 事前準備リスト作成</title>
+<title>案件面談 想定質問チェック</title>
 <style>
   body { font-family: sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-  textarea, input[type="text"] { width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px; }
-  label { font-size: 14px; }
-  .option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; margin-bottom: 8px; }
-  .row { display: flex; gap: 8px; }
-  .row > label { flex: 1; text-align: center; padding: 10px 6px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; }
-  button { font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid #888; background: white; cursor: pointer; }
-  .error { font-size: 13px; color: #c0392b; display: none; }
+  textarea { width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px; }
+  button { font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid #888; background: white; cursor: pointer; margin-top: 12px; }
+  .error { font-size: 13px; color: #c0392b; display: none; margin-top: 6px; }
   #output { display: none; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1.5rem; }
-  .note { background: #f5f5f5; border-radius: 8px; padding: 12px 16px; font-size: 14px; margin-bottom: 1.5rem; }
   .category { border: 1px solid #ddd; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
   .category h3 { margin: 0 0 8px; font-size: 16px; }
-  .star { color: #b8860b; }
   .category h4 { font-size: 13px; color: #555; margin: 10px 0 4px; }
   .category ul { margin: 0; padding-left: 1.2rem; font-size: 14px; }
   .category ul.tips li { color: #2c6e2f; }
 </style>
 </head>
 <body>
-<h2>案件面談 事前準備リスト作成</h2>
-<p style="font-size:14px;color:#555;">案件情報を入力すると、想定される質問と事前に準備しておくとよいことをまとめます。</p>
-<div style="display:flex;flex-direction:column;gap:1.5rem;">
+<h2>案件面談 想定質問チェック</h2>
+<p style="font-size:14px;color:#555;">案件の募集要項をコピペするだけで、面談で聞かれそうな質問と準備しておくとよいことをまとめます。</p>
 
-  <div>
-    <label style="font-weight:500;display:block;margin-bottom:6px;">案件内容 / URL</label>
-    <textarea id="job-content" rows="4" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
-  </div>
+<label style="font-weight:500;display:block;margin-bottom:6px;">案件内容 / URL</label>
+<textarea id="job-content" rows="6" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
+<div id="form-error" class="error"></div>
 
-  <div>
-    <label style="font-weight:500;display:block;margin-bottom:6px;">案件の形態</label>
-    <textarea id="job-format" rows="2" placeholder="例: 週2日稼働の複業、単発の業務委託、3ヶ月継続案件など"></textarea>
-  </div>
+<button id="submit-btn">想定される質問を出力</button>
 
-  <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">あなたのレベル</label>
-    <div class="row" id="level-group" style="margin-bottom:12px;">
-      <label><input type="radio" name="level" value="初心者" />初心者</label>
-      <label><input type="radio" name="level" value="実務経験あり" checked />実務経験あり</label>
-      <label><input type="radio" name="level" value="実績多数" />実績多数</label>
-    </div>
-
-    <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">スキル・経歴の概要</label>
-    <textarea id="skill-summary" rows="4" placeholder="例: Web制作歴3年、ECサイトのコーディングとShopifyテーマ改修が中心。直近はフリーランスで月3件ほど受注。" style="margin-bottom:8px;"></textarea>
-
-    <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;">
-      職務経歴書を添付(.txt/.md)
-      <input type="file" id="resume-file" accept=".txt,.md,text/plain" style="display:none;" />
-    </label>
-    <span id="file-name" style="font-size:13px;color:#555;margin-left:8px;"></span>
-    <div style="font-size:12px;color:#888;margin-top:6px;">PDFやWordファイルは内容を読み取れないため、上のテキスト欄に直接コピペしてください。</div>
-  </div>
-
-  <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">想定する面談官のタイプ</label>
-    <div id="interviewer-group">
-      <label class="option">
-        <input type="radio" name="interviewer" value="A" style="margin-top:3px;" />
-        <span><strong>A: フレンドリーなスタートアップPM</strong><br/><span style="font-size:13px;color:#555;">カジュアル、でもスキルは厳しく見る</span></span>
-      </label>
-      <label class="option">
-        <input type="radio" name="interviewer" value="B" checked style="margin-top:3px;" />
-        <span><strong>B: 標準的な代理店/事業会社の担当者</strong><br/><span style="font-size:13px;color:#555;">丁寧だが淡々と質問</span></span>
-      </label>
-      <label class="option">
-        <input type="radio" name="interviewer" value="C" style="margin-top:3px;" />
-        <span><strong>C: 予算・条件にシビアな発注担当</strong><br/><span style="font-size:13px;color:#555;">単価交渉や稼働条件を厳しく詰めてくる</span></span>
-      </label>
-    </div>
-  </div>
-
-  <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">面談の難易度(想定)</label>
-    <div class="row" id="difficulty-group">
-      <label><input type="radio" name="difficulty" value="易しい" />易しい</label>
-      <label><input type="radio" name="difficulty" value="標準" checked />標準</label>
-      <label><input type="radio" name="difficulty" value="厳しい" />厳しい</label>
-    </div>
-  </div>
-
-  <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">重点的に準備したいポイント(複数選択可)</label>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="focus-group">
-      <label class="option" style="display:inline-flex;"><input type="checkbox" value="単価交渉" />単価交渉</label>
-      <label class="option" style="display:inline-flex;"><input type="checkbox" value="実績の話し方" />実績の話し方</label>
-      <label class="option" style="display:inline-flex;"><input type="checkbox" value="稼働時間の伝え方" />稼働時間の伝え方</label>
-      <label class="option" style="display:inline-flex;"><input type="checkbox" value="コミュニケーション面の印象" />コミュニケーション面の印象</label>
-      <label class="option" style="display:inline-flex;"><input type="checkbox" value="特になし" />特になし</label>
-    </div>
-  </div>
-
-  <div id="form-error" class="error"></div>
-
-  <button id="submit-btn">事前準備リストを作成</button>
-
-  <div id="output"></div>
-</div>
+<div id="output"></div>
 
 <script>
-document.getElementById('resume-file').addEventListener('change', function(e) {
-  var file = e.target.files[0];
-  var nameEl = document.getElementById('file-name');
-  if (!file) { nameEl.textContent = ''; return; }
-  nameEl.textContent = file.name;
-  var reader = new FileReader();
-  reader.onload = function(evt) {
-    var textarea = document.getElementById('skill-summary');
-    var existing = textarea.value.trim();
-    textarea.value = existing ? existing + '\n\n' + evt.target.result : evt.target.result;
-  };
-  reader.readAsText(file);
-});
-
 function el(tag, props, children) {
   var node = document.createElement(tag);
   if (props) {
@@ -131,7 +44,12 @@ function el(tag, props, children) {
   return node;
 }
 
-function buildCategories() {
+function excerpt(text) {
+  var s = text.replace(/\s+/g, ' ').trim();
+  return s.length > 40 ? s.slice(0, 40) + '…' : s;
+}
+
+function buildCategories(jobContent) {
   return [
     {
       key: 'icebreak',
@@ -142,14 +60,14 @@ function buildCategories() {
     {
       key: 'requirements',
       title: '案件要件のすり合わせ',
-      questions: ['今回お願いしたい業務は〜ですが、対応可能そうですか?', '案件の背景や目的について理解されていますか?', '類似案件の経験はありますか?'],
+      questions: ['今回の「' + excerpt(jobContent) + '」という案件ですが、対応可能そうですか?', '案件の背景や目的について理解されていますか?', '類似案件の経験はありますか?'],
       tips: ['募集要項を読み込み、対応可否をすぐ答えられるようにしておく', '不明点があれば事前に質問リストを用意しておく']
     },
     {
       key: 'achievements',
       title: '実績・スキルの深掘り',
       questions: ['その実績で具体的にどんな役割を担いましたか?', '成果を数字で教えてください', '一番苦労した点と、どう乗り越えたかを教えてください'],
-      tips: []
+      tips: ['直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく']
     },
     {
       key: 'workConditions',
@@ -161,7 +79,7 @@ function buildCategories() {
       key: 'pricing',
       title: '単価・契約条件',
       questions: ['希望単価を教えてください', 'その金額の根拠(相場観)を教えてください', '業務範囲外の依頼が発生した場合はどう対応しますか?'],
-      tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく', '追加業務が発生した際の追加費用ルールを考えておく']
+      tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく']
     },
     {
       key: 'risk',
@@ -178,29 +96,17 @@ function buildCategories() {
   ];
 }
 
-var FOCUS_MAP = {
-  '単価交渉': { key: 'pricing', tip: '想定より低い単価を提示された場合の切り返しを準備しておく' },
-  '実績の話し方': { key: 'achievements', tip: '状況・課題・行動・結果の順で実績を話せるように整理しておく' },
-  '稼働時間の伝え方': { key: 'workConditions', tip: '「難しい」で終わらせず、代替案(曜日振替・優先順位調整など)とセットで伝える練習をしておく' },
-  'コミュニケーション面の印象': { key: 'icebreak', tip: '相槌・声のトーン・返答までの間など、話し方の印象を意識しておく' }
-};
-
-var LEVEL_TIPS = {
-  '初心者': '経験は浅くても、学習意欲や再現性のある強み(丁寧さ、レスポンスの速さなど)を言語化しておく',
-  '実務経験あり': '直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく',
-  '実績多数': '数ある実績の中から、案件に最も近いものを2〜3件に絞り込んでおく'
-};
-
-var INTERVIEWER_NOTES = {
-  'A': 'カジュアルな雰囲気でも、スキルや実績は具体的に厳しく見られる想定です。',
-  'B': '丁寧だが淡々とした進行です。要点を簡潔に答える準備をしておきましょう。',
-  'C': '単価・稼働条件をシビアに詰めてくる想定です。数字での即答準備が重要です。'
-};
+var KEYWORD_QUESTIONS = [
+  { pattern: /リモート|在宅/, key: 'workConditions', question: '完全リモートでの稼働ですが、コミュニケーション面で工夫していることはありますか?' },
+  { pattern: /常駐|出社/, key: 'workConditions', question: '出社頻度や勤務地について、対応可能な範囲を教えてください' },
+  { pattern: /週\d|曜日/, key: 'workConditions', question: '募集要項にある稼働日数・曜日に対応できますか?' },
+  { pattern: /単価|報酬|時給|月額|円/, key: 'pricing', question: '募集要項に記載の金額感について、希望とのすり合わせをさせてください' },
+  { pattern: /急募|即日|すぐ/, key: 'workConditions', question: '開始時期はいつから対応可能ですか?' },
+  { pattern: /長期|継続/, key: 'requirements', question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' }
+];
 
 document.getElementById('submit-btn').addEventListener('click', function() {
   var jobContent = document.getElementById('job-content').value.trim();
-  var jobFormat = document.getElementById('job-format').value.trim();
-  var skillSummary = document.getElementById('skill-summary').value.trim();
   var errorEl = document.getElementById('form-error');
 
   if (!jobContent) {
@@ -210,50 +116,30 @@ document.getElementById('submit-btn').addEventListener('click', function() {
   }
   errorEl.style.display = 'none';
 
-  var level = document.querySelector('input[name="level"]:checked').value;
-  var interviewer = document.querySelector('input[name="interviewer"]:checked').value;
-  var difficulty = document.querySelector('input[name="difficulty"]:checked').value;
-  var focusChecks = document.querySelectorAll('#focus-group input[type="checkbox"]:checked');
-  var focusList = Array.prototype.map.call(focusChecks, function(el) { return el.value; });
-
-  var categories = buildCategories();
+  var categories = buildCategories(jobContent);
   var byKey = {};
-  categories.forEach(function(c) { byKey[c.key] = c; c.starred = false; });
+  categories.forEach(function(c) { byKey[c.key] = c; });
 
-  byKey.achievements.tips.push(LEVEL_TIPS[level]);
-
-  if (difficulty === '厳しい') {
-    byKey.pricing.tips.push('単価交渉で押し引きされても動じないよう、譲れないラインを事前に決めておく');
-    byKey.risk.tips.push('曖昧な回答を鋭く突っ込まれた想定で、具体的な数字・エピソードを用意しておく');
-  }
-
-  focusList.forEach(function(f) {
-    var map = FOCUS_MAP[f];
-    if (map) {
-      byKey[map.key].starred = true;
-      byKey[map.key].tips.push(map.tip);
+  KEYWORD_QUESTIONS.forEach(function(kq) {
+    if (kq.pattern.test(jobContent) && byKey[kq.key].questions.indexOf(kq.question) === -1) {
+      byKey[kq.key].questions.push(kq.question);
     }
   });
 
   var output = document.getElementById('output');
   output.innerHTML = '';
 
-  output.appendChild(el('div', { class: 'note' }, [INTERVIEWER_NOTES[interviewer]]));
-
   categories.forEach(function(c) {
-    var h3 = el('h3', {}, [c.starred ? '★ ' : '', c.title]);
     var qList = el('ul', {}, c.questions.map(function(q) { return el('li', {}, [q]); }));
     var tipList = el('ul', { class: 'tips' }, c.tips.map(function(t) { return el('li', {}, [t]); }));
 
     var card = el('div', { class: 'category' }, [
-      h3,
+      el('h3', {}, [c.title]),
       el('h4', {}, ['想定される質問']),
-      qList
+      qList,
+      el('h4', {}, ['準備しておくとよいこと']),
+      tipList
     ]);
-    if (c.tips.length) {
-      card.appendChild(el('h4', {}, ['準備しておくとよいこと']));
-      card.appendChild(tipList);
-    }
     output.appendChild(card);
   });
 
