@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>面談シミュレーション設定フォーム</title>
+<style>
+  body { font-family: sans-serif; max-width: 680px; margin: 2rem auto; padding: 0 1rem; }
+  textarea, input[type="text"] { width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px; }
+  label { font-size: 14px; }
+  .option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; margin-bottom: 8px; }
+  .row { display: flex; gap: 8px; }
+  .row > label { flex: 1; text-align: center; padding: 10px 6px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; }
+  button { font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid #888; background: white; cursor: pointer; }
+  .error { font-size: 13px; color: #c0392b; display: none; }
+</style>
+</head>
+<body>
+<h2>フリーランス案件面談シミュレーション設定</h2>
+<div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+  <div>
+    <label style="font-weight:500;display:block;margin-bottom:6px;">案件内容 / URL</label>
+    <textarea id="job-content" rows="4" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
+  </div>
+
+  <div>
+    <label style="font-weight:500;display:block;margin-bottom:6px;">案件の形態</label>
+    <textarea id="job-format" rows="2" placeholder="例: 週2日稼働の複業、単発の業務委託、3ヶ月継続案件など"></textarea>
+  </div>
+
+  <div>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">あなたのレベル</label>
+    <div class="row" id="level-group" style="margin-bottom:12px;">
+      <label><input type="radio" name="level" value="初心者" />初心者</label>
+      <label><input type="radio" name="level" value="実務経験あり" checked />実務経験あり</label>
+      <label><input type="radio" name="level" value="実績多数" />実績多数</label>
+    </div>
+
+    <label style="font-size:13px;color:#555;display:block;margin-bottom:6px;">スキル・経歴の概要</label>
+    <textarea id="skill-summary" rows="4" placeholder="例: Web制作歴3年、ECサイトのコーディングとShopifyテーマ改修が中心。直近はフリーランスで月3件ほど受注。" style="margin-bottom:8px;"></textarea>
+
+    <label style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid #ccc;border-radius:8px;cursor:pointer;font-size:13px;">
+      職務経歴書を添付(.txt/.md)
+      <input type="file" id="resume-file" accept=".txt,.md,text/plain" style="display:none;" />
+    </label>
+    <span id="file-name" style="font-size:13px;color:#555;margin-left:8px;"></span>
+    <div style="font-size:12px;color:#888;margin-top:6px;">PDFやWordファイルは内容を読み取れないため、上のテキスト欄に直接コピペしてください。</div>
+  </div>
+
+  <div>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">面談官のタイプ</label>
+    <div id="interviewer-group">
+      <label class="option">
+        <input type="radio" name="interviewer" value="A" style="margin-top:3px;" />
+        <span><strong>A: フレンドリーなスタートアップPM</strong><br/><span style="font-size:13px;color:#555;">カジュアル、でもスキルは厳しく見る</span></span>
+      </label>
+      <label class="option">
+        <input type="radio" name="interviewer" value="B" checked style="margin-top:3px;" />
+        <span><strong>B: 標準的な代理店/事業会社の担当者</strong><br/><span style="font-size:13px;color:#555;">丁寧だが淡々と質問</span></span>
+      </label>
+      <label class="option">
+        <input type="radio" name="interviewer" value="C" style="margin-top:3px;" />
+        <span><strong>C: 予算・条件にシビアな発注担当</strong><br/><span style="font-size:13px;color:#555;">単価交渉や稼働条件を厳しく詰めてくる</span></span>
+      </label>
+    </div>
+  </div>
+
+  <div>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">難易度</label>
+    <div class="row" id="difficulty-group">
+      <label><input type="radio" name="difficulty" value="易しい" />易しい</label>
+      <label><input type="radio" name="difficulty" value="標準" checked />標準</label>
+      <label><input type="radio" name="difficulty" value="厳しい" />厳しい</label>
+    </div>
+  </div>
+
+  <div>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">練習したい重点ポイント(複数選択可)</label>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;" id="focus-group">
+      <label class="option" style="display:inline-flex;"><input type="checkbox" value="単価交渉" />単価交渉</label>
+      <label class="option" style="display:inline-flex;"><input type="checkbox" value="実績の話し方" />実績の話し方</label>
+      <label class="option" style="display:inline-flex;"><input type="checkbox" value="稼働時間の伝え方" />稼働時間の伝え方</label>
+      <label class="option" style="display:inline-flex;"><input type="checkbox" value="コミュニケーション面の印象" />コミュニケーション面の印象</label>
+      <label class="option" style="display:inline-flex;"><input type="checkbox" value="特になし" />特になし</label>
+    </div>
+  </div>
+
+  <div id="form-error" class="error"></div>
+
+  <button id="submit-btn">面談を始める</button>
+  <pre id="output" style="white-space:pre-wrap;background:#f5f5f5;padding:1rem;border-radius:8px;display:none;"></pre>
+</div>
+
+<script>
+document.getElementById('resume-file').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  var nameEl = document.getElementById('file-name');
+  if (!file) { nameEl.textContent = ''; return; }
+  nameEl.textContent = file.name;
+  var reader = new FileReader();
+  reader.onload = function(evt) {
+    var textarea = document.getElementById('skill-summary');
+    var existing = textarea.value.trim();
+    textarea.value = existing ? existing + '\n\n' + evt.target.result : evt.target.result;
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('submit-btn').addEventListener('click', function() {
+  var jobContent = document.getElementById('job-content').value.trim();
+  var jobFormat = document.getElementById('job-format').value.trim();
+  var skillSummary = document.getElementById('skill-summary').value.trim();
+  var errorEl = document.getElementById('form-error');
+
+  if (!jobContent) {
+    errorEl.textContent = '案件内容またはURLを入力してください';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  var level = document.querySelector('input[name="level"]:checked').value;
+  var interviewer = document.querySelector('input[name="interviewer"]:checked').value;
+  var difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+  var focusChecks = document.querySelectorAll('#focus-group input[type="checkbox"]:checked');
+  var focusList = Array.prototype.map.call(focusChecks, function(el) { return el.value; });
+  var focusText = focusList.length ? focusList.join('、') : '特になし';
+
+  var msg = '【模擬面談を開始してください】\n'
+    + '■ 案件内容/URL:\n' + jobContent + '\n\n'
+    + '■ 案件の形態: ' + (jobFormat || '(未指定)') + '\n'
+    + '■ 私のレベル: ' + level + '\n'
+    + '■ スキル・経歴の概要:\n' + (skillSummary || '(未記入)') + '\n\n'
+    + '■ 面談官タイプ: ' + interviewer + '\n'
+    + '■ 難易度: ' + difficulty + '\n'
+    + '■ 重点ポイント: ' + focusText;
+
+  var out = document.getElementById('output');
+  out.textContent = msg;
+  out.style.display = 'block';
+});
+</script>
+</body>
+</html>
