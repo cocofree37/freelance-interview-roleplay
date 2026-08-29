@@ -296,7 +296,16 @@ var KEYWORD_QUESTIONS = [
   { pattern: /週\d|曜日/, index: 3, question: '募集要項にある稼働日数・曜日に対応できますか?' },
   { pattern: /単価|報酬|時給|月額|円/, index: 4, question: '募集要項に記載の金額感について、希望とのすり合わせをさせてください' },
   { pattern: /急募|即日|すぐ/, index: 3, question: '開始時期はいつから対応可能ですか?' },
-  { pattern: /長期|継続/, index: 1, question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' }
+  { pattern: /長期|継続/, index: 1, question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' },
+
+  { pattern: /HTML|CSS|コーディング|Shopify|Wordpress|WordPress|LP制作|サイト制作/, index: 2, question: 'コーディングやサイト制作の実績を、使用言語・CMSと合わせて教えてください' },
+  { pattern: /デザイン|Figma|UI|UX|バナー/, index: 2, question: '過去に手がけたデザインの実績を見せていただくことは可能ですか?' },
+  { pattern: /マーケティング|広告運用|SNS運用|集客/, index: 2, question: '施策の効果を数値(CVR・CPAなど)で教えてください' },
+  { pattern: /経理|記帳|請求書|会計/, index: 2, question: '利用したことのある会計ソフトや経理業務の範囲を教えてください' },
+  { pattern: /ライティング|記事作成|SEO|執筆/, index: 2, question: 'SEOを意識した記事作成の実績や得意ジャンルを教えてください' },
+  { pattern: /動画編集|Premiere|After Effects|撮影/, index: 2, question: '使用している編集ソフトと、得意な動画のジャンルを教えてください' },
+  { pattern: /エンジニア|開発|プログラミング|React|Python|Java/, index: 2, question: '使用言語・フレームワークと、開発経験年数を教えてください' },
+  { pattern: /事務|アシスタント|秘書/, index: 2, question: 'これまで担当した事務業務の範囲(対応ツール含む)を教えてください' }
 ];
 
 function generateHeuristic(jobContent) {
