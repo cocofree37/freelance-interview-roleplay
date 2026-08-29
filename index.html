@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
-<title>面談シミュレーション設定フォーム</title>
+<title>案件面談 事前準備リスト作成</title>
 <style>
-  body { font-family: sans-serif; max-width: 680px; margin: 2rem auto; padding: 0 1rem; }
+  body { font-family: sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
   textarea, input[type="text"] { width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px; }
   label { font-size: 14px; }
   .option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; margin-bottom: 8px; }
@@ -12,10 +12,19 @@
   .row > label { flex: 1; text-align: center; padding: 10px 6px; border: 1px solid #ccc; border-radius: 8px; cursor: pointer; }
   button { font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid #888; background: white; cursor: pointer; }
   .error { font-size: 13px; color: #c0392b; display: none; }
+  #output { display: none; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1.5rem; }
+  .note { background: #f5f5f5; border-radius: 8px; padding: 12px 16px; font-size: 14px; margin-bottom: 1.5rem; }
+  .category { border: 1px solid #ddd; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .category h3 { margin: 0 0 8px; font-size: 16px; }
+  .star { color: #b8860b; }
+  .category h4 { font-size: 13px; color: #555; margin: 10px 0 4px; }
+  .category ul { margin: 0; padding-left: 1.2rem; font-size: 14px; }
+  .category ul.tips li { color: #2c6e2f; }
 </style>
 </head>
 <body>
-<h2>フリーランス案件面談シミュレーション設定</h2>
+<h2>案件面談 事前準備リスト作成</h2>
+<p style="font-size:14px;color:#555;">案件情報を入力すると、想定される質問と事前に準備しておくとよいことをまとめます。</p>
 <div style="display:flex;flex-direction:column;gap:1.5rem;">
 
   <div>
@@ -48,7 +57,7 @@
   </div>
 
   <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">面談官のタイプ</label>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">想定する面談官のタイプ</label>
     <div id="interviewer-group">
       <label class="option">
         <input type="radio" name="interviewer" value="A" style="margin-top:3px;" />
@@ -66,7 +75,7 @@
   </div>
 
   <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">難易度</label>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">面談の難易度(想定)</label>
     <div class="row" id="difficulty-group">
       <label><input type="radio" name="difficulty" value="易しい" />易しい</label>
       <label><input type="radio" name="difficulty" value="標準" checked />標準</label>
@@ -75,7 +84,7 @@
   </div>
 
   <div>
-    <label style="font-weight:500;display:block;margin-bottom:8px;">練習したい重点ポイント(複数選択可)</label>
+    <label style="font-weight:500;display:block;margin-bottom:8px;">重点的に準備したいポイント(複数選択可)</label>
     <div style="display:flex;flex-wrap:wrap;gap:8px;" id="focus-group">
       <label class="option" style="display:inline-flex;"><input type="checkbox" value="単価交渉" />単価交渉</label>
       <label class="option" style="display:inline-flex;"><input type="checkbox" value="実績の話し方" />実績の話し方</label>
@@ -87,8 +96,9 @@
 
   <div id="form-error" class="error"></div>
 
-  <button id="submit-btn">面談を始める</button>
-  <pre id="output" style="white-space:pre-wrap;background:#f5f5f5;padding:1rem;border-radius:8px;display:none;"></pre>
+  <button id="submit-btn">事前準備リストを作成</button>
+
+  <div id="output"></div>
 </div>
 
 <script>
@@ -105,6 +115,87 @@ document.getElementById('resume-file').addEventListener('change', function(e) {
   };
   reader.readAsText(file);
 });
+
+function el(tag, props, children) {
+  var node = document.createElement(tag);
+  if (props) {
+    Object.keys(props).forEach(function(k) {
+      if (k === 'class') node.className = props[k];
+      else node.setAttribute(k, props[k]);
+    });
+  }
+  (children || []).forEach(function(c) {
+    if (typeof c === 'string') node.appendChild(document.createTextNode(c));
+    else if (c) node.appendChild(c);
+  });
+  return node;
+}
+
+function buildCategories() {
+  return [
+    {
+      key: 'icebreak',
+      title: 'アイスブレイク・自己紹介',
+      questions: ['簡単に自己紹介をお願いします', 'これまでの経歴を教えてください', '今回応募した理由を教えてください'],
+      tips: ['30秒程度で話せる自己紹介(経歴・得意分野・実績)を用意しておく']
+    },
+    {
+      key: 'requirements',
+      title: '案件要件のすり合わせ',
+      questions: ['今回お願いしたい業務は〜ですが、対応可能そうですか?', '案件の背景や目的について理解されていますか?', '類似案件の経験はありますか?'],
+      tips: ['募集要項を読み込み、対応可否をすぐ答えられるようにしておく', '不明点があれば事前に質問リストを用意しておく']
+    },
+    {
+      key: 'achievements',
+      title: '実績・スキルの深掘り',
+      questions: ['その実績で具体的にどんな役割を担いましたか?', '成果を数字で教えてください', '一番苦労した点と、どう乗り越えたかを教えてください'],
+      tips: []
+    },
+    {
+      key: 'workConditions',
+      title: '稼働条件',
+      questions: ['稼働できる曜日・時間帯を教えてください', '繁忙期や急な依頼にはどこまで対応できますか?', '連絡ツールやレスポンス速度への希望はありますか?'],
+      tips: ['稼働可能な曜日・時間・上限時間数を数字で言えるようにしておく', '繁忙期対応の可否ラインを決めておく']
+    },
+    {
+      key: 'pricing',
+      title: '単価・契約条件',
+      questions: ['希望単価を教えてください', 'その金額の根拠(相場観)を教えてください', '業務範囲外の依頼が発生した場合はどう対応しますか?'],
+      tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく', '追加業務が発生した際の追加費用ルールを考えておく']
+    },
+    {
+      key: 'risk',
+      title: 'リスク耐性・トラブル対応',
+      questions: ['途中で仕様変更が入ったらどう対応しますか?', '他の案件と重なった場合はどうしますか?', '納期に間に合わなそうな場合、どう連絡しますか?'],
+      tips: ['トラブル時の報告・連絡・相談の方針を一言で言えるようにしておく']
+    },
+    {
+      key: 'closing',
+      title: 'クロージング・逆質問',
+      questions: ['何か質問はありますか?'],
+      tips: ['逆質問を2〜3個用意しておく(業務の進め方、チーム体制、評価基準など)']
+    }
+  ];
+}
+
+var FOCUS_MAP = {
+  '単価交渉': { key: 'pricing', tip: '想定より低い単価を提示された場合の切り返しを準備しておく' },
+  '実績の話し方': { key: 'achievements', tip: '状況・課題・行動・結果の順で実績を話せるように整理しておく' },
+  '稼働時間の伝え方': { key: 'workConditions', tip: '「難しい」で終わらせず、代替案(曜日振替・優先順位調整など)とセットで伝える練習をしておく' },
+  'コミュニケーション面の印象': { key: 'icebreak', tip: '相槌・声のトーン・返答までの間など、話し方の印象を意識しておく' }
+};
+
+var LEVEL_TIPS = {
+  '初心者': '経験は浅くても、学習意欲や再現性のある強み(丁寧さ、レスポンスの速さなど)を言語化しておく',
+  '実務経験あり': '直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく',
+  '実績多数': '数ある実績の中から、案件に最も近いものを2〜3件に絞り込んでおく'
+};
+
+var INTERVIEWER_NOTES = {
+  'A': 'カジュアルな雰囲気でも、スキルや実績は具体的に厳しく見られる想定です。',
+  'B': '丁寧だが淡々とした進行です。要点を簡潔に答える準備をしておきましょう。',
+  'C': '単価・稼働条件をシビアに詰めてくる想定です。数字での即答準備が重要です。'
+};
 
 document.getElementById('submit-btn').addEventListener('click', function() {
   var jobContent = document.getElementById('job-content').value.trim();
@@ -124,20 +215,50 @@ document.getElementById('submit-btn').addEventListener('click', function() {
   var difficulty = document.querySelector('input[name="difficulty"]:checked').value;
   var focusChecks = document.querySelectorAll('#focus-group input[type="checkbox"]:checked');
   var focusList = Array.prototype.map.call(focusChecks, function(el) { return el.value; });
-  var focusText = focusList.length ? focusList.join('、') : '特になし';
 
-  var msg = '【模擬面談を開始してください】\n'
-    + '■ 案件内容/URL:\n' + jobContent + '\n\n'
-    + '■ 案件の形態: ' + (jobFormat || '(未指定)') + '\n'
-    + '■ 私のレベル: ' + level + '\n'
-    + '■ スキル・経歴の概要:\n' + (skillSummary || '(未記入)') + '\n\n'
-    + '■ 面談官タイプ: ' + interviewer + '\n'
-    + '■ 難易度: ' + difficulty + '\n'
-    + '■ 重点ポイント: ' + focusText;
+  var categories = buildCategories();
+  var byKey = {};
+  categories.forEach(function(c) { byKey[c.key] = c; c.starred = false; });
 
-  var out = document.getElementById('output');
-  out.textContent = msg;
-  out.style.display = 'block';
+  byKey.achievements.tips.push(LEVEL_TIPS[level]);
+
+  if (difficulty === '厳しい') {
+    byKey.pricing.tips.push('単価交渉で押し引きされても動じないよう、譲れないラインを事前に決めておく');
+    byKey.risk.tips.push('曖昧な回答を鋭く突っ込まれた想定で、具体的な数字・エピソードを用意しておく');
+  }
+
+  focusList.forEach(function(f) {
+    var map = FOCUS_MAP[f];
+    if (map) {
+      byKey[map.key].starred = true;
+      byKey[map.key].tips.push(map.tip);
+    }
+  });
+
+  var output = document.getElementById('output');
+  output.innerHTML = '';
+
+  output.appendChild(el('div', { class: 'note' }, [INTERVIEWER_NOTES[interviewer]]));
+
+  categories.forEach(function(c) {
+    var h3 = el('h3', {}, [c.starred ? '★ ' : '', c.title]);
+    var qList = el('ul', {}, c.questions.map(function(q) { return el('li', {}, [q]); }));
+    var tipList = el('ul', { class: 'tips' }, c.tips.map(function(t) { return el('li', {}, [t]); }));
+
+    var card = el('div', { class: 'category' }, [
+      h3,
+      el('h4', {}, ['想定される質問']),
+      qList
+    ]);
+    if (c.tips.length) {
+      card.appendChild(el('h4', {}, ['準備しておくとよいこと']));
+      card.appendChild(tipList);
+    }
+    output.appendChild(card);
+  });
+
+  output.style.display = 'block';
+  output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 </script>
 </body>
