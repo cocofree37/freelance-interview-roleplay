@@ -2,33 +2,234 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>案件面談 想定質問チェック</title>
 <style>
-  body { font-family: sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; }
-  textarea { width: 100%; box-sizing: border-box; font-family: inherit; padding: 8px; }
-  button { font-weight: 500; padding: 10px 16px; border-radius: 8px; border: 1px solid #888; background: white; cursor: pointer; margin-top: 12px; }
-  .error { font-size: 13px; color: #c0392b; display: none; margin-top: 6px; }
-  #output { display: none; margin-top: 2rem; border-top: 1px solid #ddd; padding-top: 1.5rem; }
-  .category { border: 1px solid #ddd; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
-  .category h3 { margin: 0 0 8px; font-size: 16px; }
-  .category h4 { font-size: 13px; color: #555; margin: 10px 0 4px; }
-  .category ul { margin: 0; padding-left: 1.2rem; font-size: 14px; }
-  .category ul.tips li { color: #2c6e2f; }
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #f7f6f3;
+    --ink: #1c1b19;
+    --ink-soft: #6f6d68;
+    --line: #ddd9d1;
+    --line-soft: #eae7e0;
+    --paper: #ffffff;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 6rem 1.5rem 8rem;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin: 0 0 1.25rem;
+  }
+
+  h1 {
+    font-family: 'Zen Old Mincho', serif;
+    font-weight: 500;
+    font-size: 34px;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    margin: 0 0 1.25rem;
+  }
+
+  .lead {
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--ink-soft);
+    margin: 0 0 4rem;
+    max-width: 46ch;
+  }
+
+  .field-label {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 0.9rem;
+  }
+
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--paper);
+    border: none;
+    border-bottom: 1px solid var(--line);
+    padding: 0 0 1rem;
+    resize: vertical;
+    line-height: 1.8;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-bottom-color: var(--ink);
+  }
+
+  textarea::placeholder { color: #b3b0a8; }
+
+  .error {
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: #a44a3f;
+    display: none;
+    margin-top: 0.75rem;
+  }
+
+  button {
+    margin-top: 2.5rem;
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    font-weight: 400;
+    color: var(--paper);
+    background: var(--ink);
+    border: none;
+    padding: 1rem 2.4rem;
+    cursor: pointer;
+    transition: opacity 0.25s ease;
+  }
+
+  button:hover { opacity: 0.78; }
+  button:disabled { opacity: 0.4; cursor: default; }
+
+  .status {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 1rem;
+    display: none;
+  }
+
+  #output {
+    display: none;
+    margin-top: 6rem;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  #output.show { opacity: 1; }
+
+  .source-note {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    margin-bottom: 3rem;
+  }
+
+  .category {
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .category:first-of-type { border-top: 1px solid var(--line); }
+
+  .category .index {
+    font-family: 'Zen Old Mincho', serif;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+
+  .category h3 {
+    font-family: 'Zen Old Mincho', serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    margin: 0 0 1.5rem;
+  }
+
+  .category h4 {
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin: 1.5rem 0 0.8rem;
+  }
+
+  .category ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .category ul li {
+    font-size: 15px;
+    line-height: 1.9;
+    padding-left: 1.3rem;
+    position: relative;
+  }
+
+  .category ul li + li { margin-top: 0.5rem; }
+
+  .category ul.questions li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.85em;
+    width: 5px;
+    height: 1px;
+    background: var(--ink);
+  }
+
+  .category ul.tips li { color: var(--ink-soft); font-size: 14px; }
+
+  .category ul.tips li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.8em;
+    width: 5px;
+    height: 1px;
+    background: var(--ink-soft);
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 4rem 1.25rem 6rem; }
+    h1 { font-size: 26px; }
+  }
 </style>
 </head>
 <body>
-<h2>案件面談 想定質問チェック</h2>
-<p style="font-size:14px;color:#555;">案件の募集要項をコピペするだけで、面談で聞かれそうな質問と準備しておくとよいことをまとめます。</p>
+<div class="wrap">
+  <p class="eyebrow">Interview Preparation</p>
+  <h1>案件面談<br />想定質問チェック</h1>
+  <p class="lead">募集要項をそのまま貼り付けてください。案件の内容を読み取り、面談で聞かれそうな質問と準備しておくとよいことを整理します。</p>
 
-<label style="font-weight:500;display:block;margin-bottom:6px;">案件内容 / URL</label>
-<textarea id="job-content" rows="6" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
-<div id="form-error" class="error"></div>
+  <label class="field-label">案件内容 / URL</label>
+  <textarea id="job-content" rows="7" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
+  <div id="form-error" class="error"></div>
 
-<button id="submit-btn">想定される質問を出力</button>
+  <button id="submit-btn">想定される質問を出力</button>
+  <p id="status" class="status"></p>
 
-<div id="output"></div>
+  <div id="output"></div>
+</div>
 
 <script>
+var WORKER_URL = '';
+
 function el(tag, props, children) {
   var node = document.createElement(tag);
   if (props) {
@@ -49,46 +250,39 @@ function excerpt(text) {
   return s.length > 40 ? s.slice(0, 40) + '…' : s;
 }
 
-function buildCategories(jobContent) {
+function buildHeuristicCategories(jobContent) {
   return [
     {
-      key: 'icebreak',
       title: 'アイスブレイク・自己紹介',
       questions: ['簡単に自己紹介をお願いします', 'これまでの経歴を教えてください', '今回応募した理由を教えてください'],
       tips: ['30秒程度で話せる自己紹介(経歴・得意分野・実績)を用意しておく']
     },
     {
-      key: 'requirements',
       title: '案件要件のすり合わせ',
       questions: ['今回の「' + excerpt(jobContent) + '」という案件ですが、対応可能そうですか?', '案件の背景や目的について理解されていますか?', '類似案件の経験はありますか?'],
       tips: ['募集要項を読み込み、対応可否をすぐ答えられるようにしておく', '不明点があれば事前に質問リストを用意しておく']
     },
     {
-      key: 'achievements',
       title: '実績・スキルの深掘り',
       questions: ['その実績で具体的にどんな役割を担いましたか?', '成果を数字で教えてください', '一番苦労した点と、どう乗り越えたかを教えてください'],
       tips: ['直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく']
     },
     {
-      key: 'workConditions',
       title: '稼働条件',
       questions: ['稼働できる曜日・時間帯を教えてください', '繁忙期や急な依頼にはどこまで対応できますか?', '連絡ツールやレスポンス速度への希望はありますか?'],
       tips: ['稼働可能な曜日・時間・上限時間数を数字で言えるようにしておく', '繁忙期対応の可否ラインを決めておく']
     },
     {
-      key: 'pricing',
       title: '単価・契約条件',
       questions: ['希望単価を教えてください', 'その金額の根拠(相場観)を教えてください', '業務範囲外の依頼が発生した場合はどう対応しますか?'],
       tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく']
     },
     {
-      key: 'risk',
       title: 'リスク耐性・トラブル対応',
       questions: ['途中で仕様変更が入ったらどう対応しますか?', '他の案件と重なった場合はどうしますか?', '納期に間に合わなそうな場合、どう連絡しますか?'],
       tips: ['トラブル時の報告・連絡・相談の方針を一言で言えるようにしておく']
     },
     {
-      key: 'closing',
       title: 'クロージング・逆質問',
       questions: ['何か質問はありますか?'],
       tips: ['逆質問を2〜3個用意しておく(業務の進め方、チーム体制、評価基準など)']
@@ -97,43 +291,39 @@ function buildCategories(jobContent) {
 }
 
 var KEYWORD_QUESTIONS = [
-  { pattern: /リモート|在宅/, key: 'workConditions', question: '完全リモートでの稼働ですが、コミュニケーション面で工夫していることはありますか?' },
-  { pattern: /常駐|出社/, key: 'workConditions', question: '出社頻度や勤務地について、対応可能な範囲を教えてください' },
-  { pattern: /週\d|曜日/, key: 'workConditions', question: '募集要項にある稼働日数・曜日に対応できますか?' },
-  { pattern: /単価|報酬|時給|月額|円/, key: 'pricing', question: '募集要項に記載の金額感について、希望とのすり合わせをさせてください' },
-  { pattern: /急募|即日|すぐ/, key: 'workConditions', question: '開始時期はいつから対応可能ですか?' },
-  { pattern: /長期|継続/, key: 'requirements', question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' }
+  { pattern: /リモート|在宅/, index: 3, question: '完全リモートでの稼働ですが、コミュニケーション面で工夫していることはありますか?' },
+  { pattern: /常駐|出社/, index: 3, question: '出社頻度や勤務地について、対応可能な範囲を教えてください' },
+  { pattern: /週\d|曜日/, index: 3, question: '募集要項にある稼働日数・曜日に対応できますか?' },
+  { pattern: /単価|報酬|時給|月額|円/, index: 4, question: '募集要項に記載の金額感について、希望とのすり合わせをさせてください' },
+  { pattern: /急募|即日|すぐ/, index: 3, question: '開始時期はいつから対応可能ですか?' },
+  { pattern: /長期|継続/, index: 1, question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' }
 ];
 
-document.getElementById('submit-btn').addEventListener('click', function() {
-  var jobContent = document.getElementById('job-content').value.trim();
-  var errorEl = document.getElementById('form-error');
-
-  if (!jobContent) {
-    errorEl.textContent = '案件内容またはURLを入力してください';
-    errorEl.style.display = 'block';
-    return;
-  }
-  errorEl.style.display = 'none';
-
-  var categories = buildCategories(jobContent);
-  var byKey = {};
-  categories.forEach(function(c) { byKey[c.key] = c; });
-
+function generateHeuristic(jobContent) {
+  var categories = buildHeuristicCategories(jobContent);
   KEYWORD_QUESTIONS.forEach(function(kq) {
-    if (kq.pattern.test(jobContent) && byKey[kq.key].questions.indexOf(kq.question) === -1) {
-      byKey[kq.key].questions.push(kq.question);
+    if (kq.pattern.test(jobContent) && categories[kq.index].questions.indexOf(kq.question) === -1) {
+      categories[kq.index].questions.push(kq.question);
     }
   });
+  return categories;
+}
 
+function renderCategories(categories, sourceNote) {
   var output = document.getElementById('output');
   output.innerHTML = '';
 
-  categories.forEach(function(c) {
-    var qList = el('ul', {}, c.questions.map(function(q) { return el('li', {}, [q]); }));
-    var tipList = el('ul', { class: 'tips' }, c.tips.map(function(t) { return el('li', {}, [t]); }));
+  if (sourceNote) {
+    output.appendChild(el('p', { class: 'source-note' }, [sourceNote]));
+  }
+
+  categories.forEach(function(c, i) {
+    var num = String(i + 1).padStart(2, '0');
+    var qList = el('ul', { class: 'questions' }, (c.questions || []).map(function(q) { return el('li', {}, [q]); }));
+    var tipList = el('ul', { class: 'tips' }, (c.tips || []).map(function(t) { return el('li', {}, [t]); }));
 
     var card = el('div', { class: 'category' }, [
+      el('span', { class: 'index' }, [num]),
       el('h3', {}, [c.title]),
       el('h4', {}, ['想定される質問']),
       qList,
@@ -144,7 +334,55 @@ document.getElementById('submit-btn').addEventListener('click', function() {
   });
 
   output.style.display = 'block';
+  requestAnimationFrame(function() { output.classList.add('show'); });
   output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function generateWithAI(jobContent) {
+  var res = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: jobContent })
+  });
+  var data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'AI解析に失敗しました');
+  return data.categories;
+}
+
+document.getElementById('submit-btn').addEventListener('click', async function() {
+  var jobContent = document.getElementById('job-content').value.trim();
+  var errorEl = document.getElementById('form-error');
+  var statusEl = document.getElementById('status');
+  var btn = document.getElementById('submit-btn');
+
+  if (!jobContent) {
+    errorEl.textContent = '案件内容またはURLを入力してください';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  if (WORKER_URL) {
+    btn.disabled = true;
+    statusEl.textContent = /^https?:\/\//i.test(jobContent) ? 'URLを読み込んで解析しています…' : '案件内容を解析しています…';
+    statusEl.style.display = 'block';
+    try {
+      var categories = await generateWithAI(jobContent);
+      renderCategories(categories, null);
+    } catch (e) {
+      statusEl.textContent = 'AI解析に失敗したため、簡易版を表示します(' + e.message + ')';
+      renderCategories(generateHeuristic(jobContent), null);
+      return;
+    } finally {
+      btn.disabled = false;
+    }
+    statusEl.style.display = 'none';
+  } else {
+    var note = /^https?:\/\//i.test(jobContent)
+      ? 'AIバックエンド未接続のため、URLの中身は読み込まず簡易版で表示しています。募集要項の本文を貼り付けると、より案件に沿った質問になります。'
+      : 'AIバックエンド未接続のため、簡易版(キーワード判定)で表示しています。';
+    renderCategories(generateHeuristic(jobContent), note);
+  }
 });
 </script>
 </body>
