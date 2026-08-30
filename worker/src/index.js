@@ -1,8 +1,9 @@
 const ALLOWED_ORIGIN = 'https://cocofree37.github.io';
 const MODEL = 'claude-sonnet-5';
 const MAX_INPUT_CHARS = 6000;
+const MAX_PROFILE_CHARS = 4000;
 
-const QUESTION_SCHEMA = {
+const OUTPUT_SCHEMA = {
   type: 'object',
   properties: {
     categories: {
@@ -16,15 +17,20 @@ const QUESTION_SCHEMA = {
         },
         required: ['title', 'questions', 'tips']
       }
+    },
+    proposal: {
+      type: 'string',
+      description: 'クライアントに送る案件提案文(応募文章)。挨拶/課題理解/実績提示/解決策/期待成果/クロージングの構成を持つ、そのまま送れる完成した文章。'
     }
   },
-  required: ['categories']
+  required: ['categories', 'proposal']
 };
 
-const SYSTEM_PROMPT = `あなたはフリーランス・複業案件の採用面談を数多く実施してきたベテラン面談官です。
-渡された募集内容(案件内容)を読み、実際の面談で聞かれそうな質問を作成してください。
+const SYSTEM_PROMPT = `あなたはフリーランス・複業案件のベテラン面談官であり、また案件提案文(応募文章)を数多く手がけてきたプロのライターでもあります。
+渡された「案件内容」と、応募者本人の「実績・経歴」を読み、次の2つを日本語で作成してください。
 
-出力は次の7フェーズに沿って、フェーズごとに3〜5個の質問と、1〜3個の準備アドバイスを日本語で作成してください。
+## 1. 想定される面談質問(categories)
+実際の面談で聞かれそうな質問を、次の7フェーズに沿って作成する。フェーズごとに3〜5個の質問と、1〜3個の準備アドバイスを含める。
 1. アイスブレイク・自己紹介
 2. 案件要件のすり合わせ
 3. 実績・スキルの深掘り
@@ -32,9 +38,24 @@ const SYSTEM_PROMPT = `あなたはフリーランス・複業案件の採用面
 5. 単価・契約条件
 6. リスク耐性・トラブル対応
 7. クロージング・逆質問
+必ず渡された案件内容の具体的な要素(業務内容、必要スキル、稼働形態、報酬条件など読み取れる情報)に言及した、一般論ではない質問を含めること。案件内容から読み取れない項目は無理に触れなくてよい。
 
-必ず渡された案件内容の具体的な要素(業務内容、必要スキル、稼働形態、報酬条件など読み取れる情報)に言及した、
-一般論ではない質問を含めてください。案件内容から読み取れない項目は無理に触れなくてよいです。`;
+## 2. 案件提案文(proposal)
+クライアントの募集(案件内容)に対する提案文を、応募者の「実績・経歴」に基づいて作成する。
+
+構成は次の順とする。
+1. 挨拶と感謝の言葉
+2. クライアントの課題の理解を示すセクション(案件内容から読み取れる課題・ニーズへの言及)
+3. 応募者の関連する実績・専門知識の提示(「実績・経歴」に実際に書かれている情報のみを使う。数値や成果が書かれていればそのまま活用する)
+4. 案件に対する具体的な解決策と実施の進め方(ステップバイステップ)
+5. 期待される成果と付加価値
+6. 次のステップの提案と結びの言葉
+
+ルール:
+- トーンはプロフェッショナルかつ信頼感があり、案件への熱意と自信が伝わるものにする。簡潔で明確な表現とし、曖昧な言い回しは避ける。
+- 「実績・経歴」に書かれていない実績・数値・スキルを創作しない。情報が不足している箇所は、一般的な強み(丁寧な対応、迅速なコミュニケーションなど)で補うか、「[具体的な実績を記入してください]」のようなプレースホルダーを使う。
+- 「実績・経歴」が空欄の場合でも、案件内容だけを根拠にした提案文のテンプレートを作成し、実績を書く欄には上記のプレースホルダーを入れる。
+- 文中で専門用語を使う場合は、案件内容や実績・経歴に登場する範囲の言葉を使い、案件と無関係な分野の用語は使わない。`;
 
 function corsHeaders(origin) {
   const allow = origin === ALLOWED_ORIGIN ? origin : ALLOWED_ORIGIN;
@@ -78,7 +99,10 @@ async function fetchUrlAsText(url) {
   return collector.text.replace(/\s+/g, ' ').trim();
 }
 
-async function callClaude(jobText, apiKey) {
+async function callClaude(jobText, profileText, apiKey) {
+  const userContent = '案件内容:\n' + jobText
+    + '\n\n---\n応募者の実績・経歴:\n' + (profileText ? profileText : '(未入力。案件内容のみを根拠にテンプレートを作成してください)');
+
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -88,11 +112,11 @@ async function callClaude(jobText, apiKey) {
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 2000,
+      max_tokens: 3000,
       system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: '案件内容:\n' + jobText }],
-      tools: [{ name: 'output_questions', description: '想定質問と準備アドバイスを構造化して出力する', input_schema: QUESTION_SCHEMA }],
-      tool_choice: { type: 'tool', name: 'output_questions' }
+      messages: [{ role: 'user', content: userContent }],
+      tools: [{ name: 'output_result', description: '想定質問と案件提案文を構造化して出力する', input_schema: OUTPUT_SCHEMA }],
+      tool_choice: { type: 'tool', name: 'output_result' }
     })
   });
 
@@ -127,6 +151,7 @@ export default {
     }
 
     const input = (body.input || '').toString().trim();
+    const profile = (body.profile || '').toString().trim().slice(0, MAX_PROFILE_CHARS);
     if (!input) {
       return jsonResponse({ error: '案件内容が空です' }, 400, origin);
     }
@@ -144,7 +169,7 @@ export default {
       }
       jobText = jobText.slice(0, MAX_INPUT_CHARS);
 
-      const result = await callClaude(jobText, env.ANTHROPIC_API_KEY);
+      const result = await callClaude(jobText, profile, env.ANTHROPIC_API_KEY);
       return jsonResponse(result, 200, origin);
     } catch (e) {
       return jsonResponse({ error: e.message || String(e) }, 500, origin);

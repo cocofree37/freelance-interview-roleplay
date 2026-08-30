@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>案件面談 想定質問チェック</title>
+<title>案件面談 準備アシスト</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;500&family=Noto+Sans+JP:wght@300;400;500&display=swap');
 
@@ -205,6 +205,41 @@
     background: var(--ink-soft);
   }
 
+  .section-title {
+    font-family: 'Zen Old Mincho', serif;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    margin: 0 0 2rem;
+  }
+
+  .section + .section {
+    margin-top: 5rem;
+    padding-top: 5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .proposal-text {
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 2;
+    background: var(--paper);
+    padding: 2rem;
+    border: 1px solid var(--line-soft);
+  }
+
+  .copy-btn {
+    margin-top: 1.25rem;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--line);
+    padding: 0.6rem 1.4rem;
+  }
+
+  .copy-btn:hover { opacity: 1; background: var(--line-soft); }
+
   @media (max-width: 480px) {
     .wrap { padding: 4rem 1.25rem 6rem; }
     h1 { font-size: 26px; }
@@ -214,14 +249,17 @@
 <body>
 <div class="wrap">
   <p class="eyebrow">Interview Preparation</p>
-  <h1>案件面談<br />想定質問チェック</h1>
-  <p class="lead">募集要項をそのまま貼り付けてください。案件の内容を読み取り、面談で聞かれそうな質問と準備しておくとよいことを整理します。</p>
+  <h1>案件面談<br />準備アシスト</h1>
+  <p class="lead">募集要項を貼り付けてください。①面談で聞かれそうな質問と準備事項、②案件に対する提案文の下書きをまとめて作成します。</p>
 
   <label class="field-label">案件内容 / URL</label>
   <textarea id="job-content" rows="7" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
   <div id="form-error" class="error"></div>
 
-  <button id="submit-btn">想定される質問を出力</button>
+  <label class="field-label" style="margin-top: 2.5rem;">あなたの実績・経歴(提案文の作成に使用・任意)</label>
+  <textarea id="profile" rows="6" placeholder="職務経歴書の内容や、これまでの実績・得意分野を貼り付け(未入力でも作成できますが、具体的な提案文にするために入力を推奨します)"></textarea>
+
+  <button id="submit-btn">出力する</button>
   <p id="status" class="status"></p>
 
   <div id="output"></div>
@@ -318,7 +356,35 @@ function generateHeuristic(jobContent) {
   return categories;
 }
 
-function renderCategories(categories, sourceNote) {
+function generateProposalHeuristic(jobContent, profile) {
+  var jobExcerpt = excerpt(jobContent);
+  var profileText = (profile || '').trim();
+  var achievementsBlock = profileText || '[ここにご自身の実績・スキルを記入してください]';
+
+  return [
+    '拝啓',
+    '',
+    'この度は貴社の募集をご覧になり、ご連絡いたしました。',
+    '',
+    '募集内容を拝見し、「' + jobExcerpt + '」という点にお困りかと存じます。',
+    '',
+    '私にはこれまで、以下のような実績・経験がございます。',
+    achievementsBlock,
+    '',
+    'つきましては、以下のような進め方で貴社の課題解決に貢献できればと考えております。',
+    '1. まずは現状のヒアリングと要件の整理を行います',
+    '2. 整理した要件をもとに、具体的な進め方・スケジュールをご提案します',
+    '3. 実施しながら適宜認識合わせを行い、認識のズレを防ぎます',
+    '',
+    'これにより、業務の効率化や成果の向上に貢献できるものと考えております。',
+    '',
+    'ご不明点やご要望がございましたら、お気軽にお申し付けください。ご検討のほど、何卒よろしくお願いいたします。',
+    '',
+    '敬具'
+  ].join('\n');
+}
+
+function renderResult(categories, proposal, sourceNote) {
   var output = document.getElementById('output');
   output.innerHTML = '';
 
@@ -326,6 +392,9 @@ function renderCategories(categories, sourceNote) {
     output.appendChild(el('p', { class: 'source-note' }, [sourceNote]));
   }
 
+  var questionSection = el('div', { class: 'section' }, [
+    el('p', { class: 'section-title' }, ['① 想定される質問']),
+  ]);
   categories.forEach(function(c, i) {
     var num = String(i + 1).padStart(2, '0');
     var qList = el('ul', { class: 'questions' }, (c.questions || []).map(function(q) { return el('li', {}, [q]); }));
@@ -339,27 +408,44 @@ function renderCategories(categories, sourceNote) {
       el('h4', {}, ['準備しておくとよいこと']),
       tipList
     ]);
-    output.appendChild(card);
+    questionSection.appendChild(card);
   });
+  output.appendChild(questionSection);
+
+  var copyBtn = el('button', { class: 'copy-btn' }, ['提案文をコピー']);
+  copyBtn.addEventListener('click', function() {
+    navigator.clipboard.writeText(proposal).then(function() {
+      copyBtn.textContent = 'コピーしました';
+      setTimeout(function() { copyBtn.textContent = '提案文をコピー'; }, 2000);
+    });
+  });
+
+  var proposalSection = el('div', { class: 'section' }, [
+    el('p', { class: 'section-title' }, ['② 案件提案文(下書き)']),
+    el('div', { class: 'proposal-text' }, [proposal]),
+    copyBtn
+  ]);
+  output.appendChild(proposalSection);
 
   output.style.display = 'block';
   requestAnimationFrame(function() { output.classList.add('show'); });
   output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-async function generateWithAI(jobContent) {
+async function generateWithAI(jobContent, profile) {
   var res = await fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input: jobContent })
+    body: JSON.stringify({ input: jobContent, profile: profile })
   });
   var data = await res.json();
   if (!res.ok) throw new Error(data.error || 'AI解析に失敗しました');
-  return data.categories;
+  return data;
 }
 
 document.getElementById('submit-btn').addEventListener('click', async function() {
   var jobContent = document.getElementById('job-content').value.trim();
+  var profile = document.getElementById('profile').value.trim();
   var errorEl = document.getElementById('form-error');
   var statusEl = document.getElementById('status');
   var btn = document.getElementById('submit-btn');
@@ -376,11 +462,11 @@ document.getElementById('submit-btn').addEventListener('click', async function()
     statusEl.textContent = /^https?:\/\//i.test(jobContent) ? 'URLを読み込んで解析しています…' : '案件内容を解析しています…';
     statusEl.style.display = 'block';
     try {
-      var categories = await generateWithAI(jobContent);
-      renderCategories(categories, null);
+      var data = await generateWithAI(jobContent, profile);
+      renderResult(data.categories, data.proposal, null);
     } catch (e) {
       statusEl.textContent = 'AI解析に失敗したため、簡易版を表示します(' + e.message + ')';
-      renderCategories(generateHeuristic(jobContent), null);
+      renderResult(generateHeuristic(jobContent), generateProposalHeuristic(jobContent, profile), null);
       return;
     } finally {
       btn.disabled = false;
@@ -388,9 +474,9 @@ document.getElementById('submit-btn').addEventListener('click', async function()
     statusEl.style.display = 'none';
   } else {
     var note = /^https?:\/\//i.test(jobContent)
-      ? 'AIバックエンド未接続のため、URLの中身は読み込まず簡易版で表示しています。募集要項の本文を貼り付けると、より案件に沿った質問になります。'
-      : 'AIバックエンド未接続のため、簡易版(キーワード判定)で表示しています。';
-    renderCategories(generateHeuristic(jobContent), note);
+      ? 'AIバックエンド未接続のため、URLの中身は読み込まず簡易版で表示しています。募集要項の本文を貼り付けると、より案件に沿った内容になります。'
+      : 'AIバックエンド未接続のため、簡易版(テンプレート)で表示しています。';
+    renderResult(generateHeuristic(jobContent), generateProposalHeuristic(jobContent, profile), note);
   }
 });
 </script>
