@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>マイページ | 案件面談 準備アシスト</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-link" href="./">← 案件の準備に戻る</a>
+  <p class="eyebrow">My Page</p>
+  <h1>マイページ</h1>
+  <p class="lead">提案文の作成や、面談の想定質問に使う経歴・実績を登録します。案件ごとに貼り付ける必要はありません。</p>
+
+  <div id="unavailable" class="msg hidden">この機能はまだ有効になっていません。</div>
+
+  <div id="auth-out" class="hidden">
+    <label class="field-label">ログイン</label>
+    <div class="row" style="margin-top:0">
+      <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
+      <button id="auth-send" class="ghost">ログインリンクを送る</button>
+    </div>
+    <p id="auth-msg" class="msg"></p>
+  </div>
+
+  <div id="mypage" class="hidden">
+    <div class="mypage-section">
+      <h2>アカウント</h2>
+      <div class="row" style="margin-top:0">
+        <span id="account-email" class="msg" style="margin:0"></span>
+        <button id="auth-logout" class="ghost">ログアウト</button>
+      </div>
+    </div>
+
+    <div class="mypage-section">
+      <h2>経歴・実績</h2>
+      <textarea id="profile" rows="16" placeholder="職務経歴書の内容、実績(数値があれば具体的に)、得意分野、対応可能な業務、稼働条件などを貼り付けてください"></textarea>
+      <p id="counter" class="counter">0 / 8,000文字</p>
+      <p class="hint">提案文の作成では、ここに書かれている事実だけを使います。数値や成果は具体的に書くほど、提案文が具体的になります。想定質問では、案件との差から「突っ込まれそうな点」も出します。</p>
+      <div class="row">
+        <button id="profile-save" class="ghost">保存する</button>
+        <span id="saved-at" class="msg" style="margin:0"></span>
+      </div>
+      <p id="profile-msg" class="msg"></p>
+    </div>
+
+    <div class="mypage-section">
+      <h2>データの管理</h2>
+      <p class="hint" style="margin-top:0">経歴はあなただけが読み書きできる形で保存されます。案件の作成を実行したときのみ、生成のためAI(Anthropic Claude)に送信されます。</p>
+      <div class="row">
+        <button id="profile-delete" class="ghost danger">保存した経歴を削除</button>
+      </div>
+      <p class="hint">アカウント自体の削除をご希望の場合は、運営者までご連絡ください。</p>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+var MAX_CHARS = 8000;
+var configured = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && CONFIG.WORKER_URL && window.supabase);
+var sb = configured ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
+var session = null;
+var savedProfile = '';
+var loaded = false;
+
+function $(id) { return document.getElementById(id); }
+
+function setMsg(node, text, isError) {
+  node.textContent = text || '';
+  node.classList.toggle('error', !!isError);
+}
+
+function isDirty() { return loaded && $('profile').value.trim() !== savedProfile; }
+
+function updateCounter() {
+  var len = $('profile').value.length;
+  var node = $('counter');
+  node.textContent = len.toLocaleString() + ' / ' + MAX_CHARS.toLocaleString() + '文字';
+  node.classList.toggle('over', len > MAX_CHARS);
+}
+
+function render() {
+  $('unavailable').classList.toggle('hidden', configured);
+  $('auth-out').classList.toggle('hidden', !configured || !!session);
+  $('mypage').classList.toggle('hidden', !configured || !session);
+  if (session) $('account-email').textContent = session.user.email;
+}
+
+async function loadProfile() {
+  loaded = false;
+  var res = await sb.from('profiles').select('content, updated_at').eq('user_id', session.user.id).maybeSingle();
+  if (res.error) { setMsg($('profile-msg'), '経歴の読み込みに失敗しました。時間をおいて再度お試しください', true); return; }
+  savedProfile = res.data ? res.data.content : '';
+  $('profile').value = savedProfile;
+  updateCounter();
+  setMsg($('saved-at'), res.data ? '最終保存: ' + new Date(res.data.updated_at).toLocaleString('ja-JP') : '未保存', false);
+  loaded = true;
+}
+
+$('profile').addEventListener('input', function() {
+  updateCounter();
+  setMsg($('profile-msg'), '', false);
+});
+
+$('profile-save').addEventListener('click', async function() {
+  var content = $('profile').value.trim();
+  if (content.length > MAX_CHARS) {
+    setMsg($('profile-msg'), MAX_CHARS.toLocaleString() + '文字以内にしてください(現在 ' + content.length.toLocaleString() + '文字)', true);
+    return;
+  }
+  if (!loaded) { setMsg($('profile-msg'), '経歴を読み込めていないため保存できません。ページを再読み込みしてください', true); return; }
+  var btn = $('profile-save');
+  btn.disabled = true;
+  var now = new Date();
+  var res = await sb.from('profiles').upsert({ user_id: session.user.id, content: content, updated_at: now.toISOString() });
+  btn.disabled = false;
+  if (res.error) { setMsg($('profile-msg'), '保存に失敗しました。時間をおいて再度お試しください', true); return; }
+  savedProfile = content;
+  setMsg($('profile-msg'), '保存しました', false);
+  setMsg($('saved-at'), '最終保存: ' + now.toLocaleString('ja-JP'), false);
+});
+
+$('profile-delete').addEventListener('click', async function() {
+  if (!confirm('保存した経歴を削除しますか?この操作は取り消せません。')) return;
+  var res = await sb.from('profiles').delete().eq('user_id', session.user.id);
+  if (res.error) { setMsg($('profile-msg'), '削除に失敗しました', true); return; }
+  savedProfile = '';
+  $('profile').value = '';
+  updateCounter();
+  setMsg($('saved-at'), '未保存', false);
+  setMsg($('profile-msg'), '削除しました', false);
+});
+
+$('auth-send').addEventListener('click', async function() {
+  var email = $('auth-email').value.trim();
+  if (!email) { setMsg($('auth-msg'), 'メールアドレスを入力してください', true); return; }
+  var btn = $('auth-send');
+  btn.disabled = true;
+  var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + location.pathname } });
+  btn.disabled = false;
+  if (res.error) { setMsg($('auth-msg'), 'メールの送信に失敗しました。時間をおいてお試しください', true); return; }
+  setMsg($('auth-msg'), 'ログイン用のリンクをメールで送信しました。メール内のリンクを開いてください。', false);
+});
+
+$('auth-logout').addEventListener('click', function() {
+  if (isDirty() && !confirm('保存していない変更があります。ログアウトしますか?')) return;
+  sb.auth.signOut();
+});
+
+window.addEventListener('beforeunload', function(e) {
+  if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
+});
+
+(async function init() {
+  if (configured) {
+    var res = await sb.auth.getSession();
+    session = res.data.session;
+    sb.auth.onAuthStateChange(function(_event, s) {
+      var changed = (s && s.user.id) !== (session && session.user.id);
+      session = s;
+      setTimeout(function() {
+        render();
+        if (changed) {
+          if (s) loadProfile();
+          else { savedProfile = ''; loaded = false; $('profile').value = ''; }
+        }
+      }, 0);
+    });
+    if (session) await loadProfile();
+  }
+  render();
+})();
+</script>
+</body>
+</html>

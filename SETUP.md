@@ -43,7 +43,7 @@ wrangler deploy
 
 ## 3. フロントエンド
 
-[index.html](index.html) の先頭付近にある設定を埋めて push します。
+[config.js](config.js) の設定を埋めて push します。
 
 ```js
 var CONFIG = { SUPABASE_URL: 'https://xxxx.supabase.co', SUPABASE_ANON_KEY: '(anonキー)', WORKER_URL: 'https://....workers.dev' };

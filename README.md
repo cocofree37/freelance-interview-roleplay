@@ -2,7 +2,7 @@
 
 案件のURLまたはテキストを入力し、次のどちらかを作成するツールです。
 
-- **応募提案文の作成** — 案件と、登録した経歴・実績から提案文の下書きを作成(情報不足ならAIが最大3問質問)
+- **応募提案文の作成** — 案件と、マイページに登録した経歴・実績から提案文の下書きを作成(情報不足ならAIが最大3問質問)
 - **面談で想定される質問** — 想定質問と準備事項に加え、経歴と案件のギャップから「突っ込まれそうな点」を提示
 
 **アプリはこちら → https://cocofree37.github.io/freelance-interview-roleplay/**
@@ -16,7 +16,9 @@
 
 ## 構成
 
-- [index.html](index.html) — フロントエンド(GitHub Pagesの公開ページ本体)
+- [index.html](index.html) — トップ画面(案件の入力と作成。GitHub Pagesの公開ページ本体)
+- [mypage.html](mypage.html) — マイページ(ログイン、経歴・実績の登録・編集・削除)
+- [config.js](config.js) — Supabase・Workerの接続設定(公開前提の値のみ)/ [style.css](style.css) — 共通スタイル
 - [worker/](worker/) — Cloudflare Worker(本人確認・利用回数管理・URL取得・Claude呼び出し)。仕様は [worker/README.md](worker/README.md)
 - [supabase/schema.sql](supabase/schema.sql) — 経歴テーブル(行レベルセキュリティ付き)と利用回数の管理関数
 - [SETUP.md](SETUP.md) — AI版を有効にする手順、費用の目安、個人情報の扱い
