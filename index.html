@@ -14,6 +14,7 @@
     --line: #ddd9d1;
     --line-soft: #eae7e0;
     --paper: #ffffff;
+    --alert: #a44a3f;
   }
 
   * { box-sizing: border-box; }
@@ -27,246 +28,222 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .wrap {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 6rem 1.5rem 8rem;
-  }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 6rem 1.5rem 8rem; }
 
   .eyebrow {
-    font-size: 12px;
-    letter-spacing: 0.28em;
-    color: var(--ink-soft);
-    text-transform: uppercase;
-    margin: 0 0 1.25rem;
+    font-size: 12px; letter-spacing: 0.28em; color: var(--ink-soft);
+    text-transform: uppercase; margin: 0 0 1.25rem;
   }
 
   h1 {
-    font-family: 'Zen Old Mincho', serif;
-    font-weight: 500;
-    font-size: 34px;
-    line-height: 1.5;
-    letter-spacing: 0.02em;
-    margin: 0 0 1.25rem;
+    font-family: 'Zen Old Mincho', serif; font-weight: 500; font-size: 34px;
+    line-height: 1.5; letter-spacing: 0.02em; margin: 0 0 1.25rem;
   }
 
-  .lead {
-    font-size: 15px;
-    line-height: 1.9;
-    color: var(--ink-soft);
-    margin: 0 0 4rem;
-    max-width: 46ch;
-  }
+  .lead { font-size: 15px; line-height: 1.9; color: var(--ink-soft); margin: 0 0 3.5rem; max-width: 46ch; }
+
+  .block { margin-top: 3rem; }
 
   .field-label {
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    color: var(--ink-soft);
-    display: block;
-    margin-bottom: 0.9rem;
+    font-size: 12px; letter-spacing: 0.14em; color: var(--ink-soft);
+    display: block; margin-bottom: 0.9rem;
   }
 
-  textarea {
-    width: 100%;
-    box-sizing: border-box;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: 300;
-    color: var(--ink);
-    background: var(--paper);
-    border: none;
-    border-bottom: 1px solid var(--line);
-    padding: 0 0 1rem;
-    resize: vertical;
-    line-height: 1.8;
-  }
+  .hint { font-size: 12px; line-height: 1.8; color: var(--ink-soft); margin: 0.7rem 0 0; }
 
-  textarea:focus {
-    outline: none;
-    border-bottom-color: var(--ink);
+  textarea, input[type="email"] {
+    width: 100%; font-family: inherit; font-size: 15px; font-weight: 300;
+    color: var(--ink); background: var(--paper); border: none;
+    border-bottom: 1px solid var(--line); padding: 0 0 1rem; line-height: 1.8; border-radius: 0;
   }
+  textarea { resize: vertical; }
+  input[type="email"] { padding: 0.6rem 0.8rem; border: 1px solid var(--line); }
 
-  textarea::placeholder { color: #b3b0a8; }
-
-  .error {
-    font-size: 12px;
-    letter-spacing: 0.04em;
-    color: #a44a3f;
-    display: none;
-    margin-top: 0.75rem;
-  }
+  textarea:focus, input[type="email"]:focus { outline: none; border-color: var(--ink); }
+  textarea::placeholder, input::placeholder { color: #b3b0a8; }
 
   button {
-    margin-top: 2.5rem;
-    font-family: inherit;
-    font-size: 13px;
-    letter-spacing: 0.18em;
-    font-weight: 400;
-    color: var(--paper);
-    background: var(--ink);
-    border: none;
-    padding: 1rem 2.4rem;
-    cursor: pointer;
-    transition: opacity 0.25s ease;
+    font-family: inherit; font-size: 13px; letter-spacing: 0.18em; font-weight: 400;
+    color: var(--paper); background: var(--ink); border: none;
+    padding: 1rem 2.4rem; cursor: pointer; transition: opacity 0.25s ease;
   }
-
   button:hover { opacity: 0.78; }
   button:disabled { opacity: 0.4; cursor: default; }
 
-  .status {
-    font-size: 13px;
-    color: var(--ink-soft);
-    margin-top: 1rem;
-    display: none;
+  button.primary { margin-top: 2.5rem; }
+  button.ghost {
+    color: var(--ink); background: transparent; border: 1px solid var(--line);
+    padding: 0.6rem 1.4rem; font-size: 12px; letter-spacing: 0.1em;
   }
+  button.ghost:hover { opacity: 1; background: var(--line-soft); }
+  button.danger { color: var(--alert); }
 
-  #output {
-    display: none;
-    margin-top: 6rem;
-    opacity: 0;
-    transition: opacity 0.6s ease;
+  .row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1rem; }
+  .row input[type="email"] { flex: 1; min-width: 200px; }
+
+  .msg { font-size: 13px; line-height: 1.8; color: var(--ink-soft); margin: 0.9rem 0 0; }
+  .msg.error { color: var(--alert); }
+
+  details.panel { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 1.2rem 0; }
+  details.panel summary { cursor: pointer; font-size: 13px; letter-spacing: 0.1em; list-style: none; }
+  details.panel summary::-webkit-details-marker { display: none; }
+  details.panel summary::after { content: '+'; float: right; color: var(--ink-soft); }
+  details.panel[open] summary::after { content: '–'; }
+  details.panel .inner { padding-top: 1.5rem; }
+
+  .modes { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
+  .mode {
+    display: block; padding: 1.1rem 1.2rem; border: 1px solid var(--line);
+    background: var(--paper); cursor: pointer;
   }
+  .mode input { position: absolute; opacity: 0; pointer-events: none; }
+  .mode.selected { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .mode-title { display: block; font-size: 14px; font-weight: 500; margin-bottom: 0.4rem; }
+  .mode-desc { display: block; font-size: 12px; line-height: 1.7; color: var(--ink-soft); }
 
+  #output { display: none; margin-top: 5rem; opacity: 0; transition: opacity 0.6s ease; }
   #output.show { opacity: 1; }
 
-  .source-note {
-    font-size: 12px;
-    color: var(--ink-soft);
-    letter-spacing: 0.04em;
-    margin-bottom: 3rem;
-  }
-
-  .category {
-    padding: 2.5rem 0;
-    border-top: 1px solid var(--line-soft);
-  }
-
-  .category:first-of-type { border-top: 1px solid var(--line); }
-
-  .category .index {
-    font-family: 'Zen Old Mincho', serif;
-    font-size: 12px;
-    letter-spacing: 0.2em;
-    color: var(--ink-soft);
-    display: block;
-    margin-bottom: 0.6rem;
-  }
-
-  .category h3 {
-    font-family: 'Zen Old Mincho', serif;
-    font-weight: 500;
-    font-size: 20px;
-    letter-spacing: 0.02em;
-    margin: 0 0 1.5rem;
-  }
-
-  .category h4 {
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    color: var(--ink-soft);
-    text-transform: uppercase;
-    margin: 1.5rem 0 0.8rem;
-  }
-
-  .category ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .category ul li {
-    font-size: 15px;
-    line-height: 1.9;
-    padding-left: 1.3rem;
-    position: relative;
-  }
-
-  .category ul li + li { margin-top: 0.5rem; }
-
-  .category ul.questions li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.85em;
-    width: 5px;
-    height: 1px;
-    background: var(--ink);
-  }
-
-  .category ul.tips li { color: var(--ink-soft); font-size: 14px; }
-
-  .category ul.tips li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.8em;
-    width: 5px;
-    height: 1px;
-    background: var(--ink-soft);
-  }
+  .source-note { font-size: 12px; color: var(--ink-soft); letter-spacing: 0.04em; margin-bottom: 3rem; line-height: 1.8; }
 
   .section-title {
-    font-family: 'Zen Old Mincho', serif;
-    font-weight: 500;
-    font-size: 22px;
-    letter-spacing: 0.02em;
-    margin: 0 0 2rem;
+    font-family: 'Zen Old Mincho', serif; font-weight: 500; font-size: 22px;
+    letter-spacing: 0.02em; margin: 0 0 2rem;
   }
+  .section + .section { margin-top: 5rem; padding-top: 5rem; border-top: 1px solid var(--line); }
 
-  .section + .section {
-    margin-top: 5rem;
-    padding-top: 5rem;
-    border-top: 1px solid var(--line);
+  .category { padding: 2.5rem 0; border-top: 1px solid var(--line-soft); }
+  .category:first-of-type { border-top: 1px solid var(--line); }
+  .category .index {
+    font-family: 'Zen Old Mincho', serif; font-size: 12px; letter-spacing: 0.2em;
+    color: var(--ink-soft); display: block; margin-bottom: 0.6rem;
   }
+  .category h3 {
+    font-family: 'Zen Old Mincho', serif; font-weight: 500; font-size: 20px;
+    letter-spacing: 0.02em; margin: 0 0 1.5rem;
+  }
+  .category h4 {
+    font-size: 11px; letter-spacing: 0.16em; color: var(--ink-soft);
+    text-transform: uppercase; margin: 1.5rem 0 0.8rem;
+  }
+  .category ul { margin: 0; padding: 0; list-style: none; }
+  .category ul li { font-size: 15px; line-height: 1.9; padding-left: 1.3rem; position: relative; }
+  .category ul li + li { margin-top: 0.5rem; }
+  .category ul li::before {
+    content: ''; position: absolute; left: 0; top: 0.85em; width: 5px; height: 1px; background: var(--ink);
+  }
+  .category ul.tips li { color: var(--ink-soft); font-size: 14px; }
+  .category ul.tips li::before { background: var(--ink-soft); }
+
+  .gap { padding: 1.6rem 0; border-top: 1px solid var(--line-soft); }
+  .gap:first-of-type { border-top: 1px solid var(--line); }
+  .gap p { margin: 0; font-size: 15px; line-height: 1.9; }
+  .gap p.advice { color: var(--ink-soft); font-size: 14px; margin-top: 0.5rem; }
 
   .proposal-text {
-    white-space: pre-wrap;
-    font-size: 15px;
-    line-height: 2;
-    background: var(--paper);
-    padding: 2rem;
-    border: 1px solid var(--line-soft);
+    white-space: pre-wrap; font-size: 15px; line-height: 2; background: var(--paper);
+    padding: 2rem; border: 1px solid var(--line-soft);
   }
 
-  .copy-btn {
-    margin-top: 1.25rem;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    color: var(--ink);
-    background: transparent;
-    border: 1px solid var(--line);
-    padding: 0.6rem 1.4rem;
-  }
+  .clarify-item { margin-top: 2rem; }
+  .clarify-item p { margin: 0 0 0.8rem; font-size: 15px; line-height: 1.8; }
 
-  .copy-btn:hover { opacity: 1; background: var(--line-soft); }
+  footer.note { margin-top: 6rem; padding-top: 2rem; border-top: 1px solid var(--line-soft); }
+  footer.note p { font-size: 11px; line-height: 1.9; color: var(--ink-soft); margin: 0 0 0.4rem; }
+
+  .hidden { display: none !important; }
 
   @media (max-width: 480px) {
     .wrap { padding: 4rem 1.25rem 6rem; }
     h1 { font-size: 26px; }
+    .modes { grid-template-columns: 1fr; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="wrap">
   <p class="eyebrow">Interview Preparation</p>
   <h1>案件面談<br />準備アシスト</h1>
-  <p class="lead">募集要項を貼り付けてください。①面談で聞かれそうな質問と準備事項、②案件に対する提案文の下書きをまとめて作成します。</p>
+  <p class="lead">案件のURLまたはテキストを入力し、「応募提案文の作成」か「面談で想定される質問」を選ぶだけ。あなたの経歴・実績を踏まえて作成します。</p>
 
-  <label class="field-label">案件内容 / URL</label>
-  <textarea id="job-content" rows="7" placeholder="募集要項をコピペ、または案件URLを貼り付け"></textarea>
-  <div id="form-error" class="error"></div>
+  <div id="auth-panel" class="block hidden" style="margin-top:0">
+    <div id="auth-out">
+      <label class="field-label">ログイン(経歴の保存と、AIによる作成に必要です)</label>
+      <div class="row" style="margin-top:0">
+        <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
+        <button id="auth-send" class="ghost">ログインリンクを送る</button>
+      </div>
+      <p id="auth-msg" class="msg"></p>
+    </div>
+    <div id="auth-in" class="hidden">
+      <div class="row" style="margin-top:0">
+        <span id="auth-user" class="msg" style="margin:0"></span>
+        <button id="auth-logout" class="ghost">ログアウト</button>
+      </div>
+    </div>
+  </div>
 
-  <label class="field-label" style="margin-top: 2.5rem;">あなたの実績・経歴(提案文の作成に使用・任意)</label>
-  <textarea id="profile" rows="6" placeholder="職務経歴書の内容や、これまでの実績・得意分野を貼り付け(未入力でも作成できますが、具体的な提案文にするために入力を推奨します)"></textarea>
+  <div id="mode-note" class="source-note hidden"></div>
 
-  <button id="submit-btn">出力する</button>
-  <p id="status" class="status"></p>
+  <div id="profile-block" class="block hidden">
+    <details class="panel" id="profile-panel">
+      <summary>あなたの経歴・実績</summary>
+      <div class="inner">
+        <textarea id="profile" rows="10" placeholder="職務経歴書の内容、実績(数値があれば具体的に)、得意分野、対応可能な業務などを貼り付けてください"></textarea>
+        <p class="hint">提案文の作成に必要です。想定質問では、経歴と案件のギャップから「突っ込まれそうな点」も出します。</p>
+        <div class="row">
+          <button id="profile-save" class="ghost">保存する</button>
+          <button id="profile-delete" class="ghost danger">保存した経歴を削除</button>
+        </div>
+        <p id="profile-msg" class="msg"></p>
+      </div>
+    </details>
+  </div>
+
+  <div class="block">
+    <label class="field-label">案件のURL または テキスト</label>
+    <textarea id="job-content" rows="7" placeholder="案件のURLを貼り付け、または募集要項をコピペ"></textarea>
+    <p id="url-hint" class="hint">URLの場合は本文を自動で取得します。ログインが必要なページなどで取得できない場合は、本文を貼り付けてください。</p>
+  </div>
+
+  <div class="block">
+    <label class="field-label">作成するもの</label>
+    <div class="modes">
+      <label class="mode selected">
+        <input type="radio" name="mode" value="proposal" checked />
+        <span class="mode-title">応募提案文の作成</span>
+        <span class="mode-desc">案件と経歴から、そのまま送れる提案文の下書きを作成します</span>
+      </label>
+      <label class="mode">
+        <input type="radio" name="mode" value="questions" />
+        <span class="mode-title">面談で想定される質問</span>
+        <span class="mode-desc">聞かれそうな質問と、突っ込まれそうな点・準備事項をまとめます</span>
+      </label>
+    </div>
+  </div>
+
+  <div id="form-error" class="msg error hidden"></div>
+  <button id="submit-btn" class="primary">作成する</button>
+  <p id="status" class="msg hidden"></p>
 
   <div id="output"></div>
+
+  <footer class="note">
+    <p>入力した案件内容・経歴は、文章の生成のためAI(Anthropic Claude)に送信されます。経歴は本人のみが閲覧できる形で保存され、いつでも削除できます。</p>
+    <p>生成される文章はあくまで下書きです。内容の正確性をご自身で確認のうえ、ご利用ください。</p>
+  </footer>
 </div>
 
 <script>
-var WORKER_URL = '';
+var CONFIG = { SUPABASE_URL: '', SUPABASE_ANON_KEY: '', WORKER_URL: '' };
+
+var configured = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && CONFIG.WORKER_URL && window.supabase);
+var sb = configured ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
+var session = null;
+var savedProfile = '';
+
+function $(id) { return document.getElementById(id); }
 
 function el(tag, props, children) {
   var node = document.createElement(tag);
@@ -283,6 +260,15 @@ function el(tag, props, children) {
   return node;
 }
 
+function setMsg(node, text, isError) {
+  node.textContent = text || '';
+  node.classList.toggle('error', !!isError);
+}
+
+function currentMode() { return document.querySelector('input[name="mode"]:checked').value; }
+
+/* ---------- ローカル簡易版(未設定時のフォールバック) ---------- */
+
 function excerpt(text) {
   var s = text.replace(/\s+/g, ' ').trim();
   return s.length > 40 ? s.slice(0, 40) + '…' : s;
@@ -290,41 +276,27 @@ function excerpt(text) {
 
 function buildHeuristicCategories(jobContent) {
   return [
-    {
-      title: 'アイスブレイク・自己紹介',
+    { title: 'アイスブレイク・自己紹介',
       questions: ['簡単に自己紹介をお願いします', 'これまでの経歴を教えてください', '今回応募した理由を教えてください'],
-      tips: ['30秒程度で話せる自己紹介(経歴・得意分野・実績)を用意しておく']
-    },
-    {
-      title: '案件要件のすり合わせ',
+      tips: ['30秒程度で話せる自己紹介(経歴・得意分野・実績)を用意しておく'] },
+    { title: '案件要件のすり合わせ',
       questions: ['今回の「' + excerpt(jobContent) + '」という案件ですが、対応可能そうですか?', '案件の背景や目的について理解されていますか?', '類似案件の経験はありますか?'],
-      tips: ['募集要項を読み込み、対応可否をすぐ答えられるようにしておく', '不明点があれば事前に質問リストを用意しておく']
-    },
-    {
-      title: '実績・スキルの深掘り',
+      tips: ['募集要項を読み込み、対応可否をすぐ答えられるようにしておく', '不明点があれば事前に質問リストを用意しておく'] },
+    { title: '実績・スキルの深掘り',
       questions: ['その実績で具体的にどんな役割を担いましたか?', '成果を数字で教えてください', '一番苦労した点と、どう乗り越えたかを教えてください'],
-      tips: ['直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく']
-    },
-    {
-      title: '稼働条件',
+      tips: ['直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく'] },
+    { title: '稼働条件',
       questions: ['稼働できる曜日・時間帯を教えてください', '繁忙期や急な依頼にはどこまで対応できますか?', '連絡ツールやレスポンス速度への希望はありますか?'],
-      tips: ['稼働可能な曜日・時間・上限時間数を数字で言えるようにしておく', '繁忙期対応の可否ラインを決めておく']
-    },
-    {
-      title: '単価・契約条件',
+      tips: ['稼働可能な曜日・時間・上限時間数を数字で言えるようにしておく', '繁忙期対応の可否ラインを決めておく'] },
+    { title: '単価・契約条件',
       questions: ['希望単価を教えてください', 'その金額の根拠(相場観)を教えてください', '業務範囲外の依頼が発生した場合はどう対応しますか?'],
-      tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく']
-    },
-    {
-      title: 'リスク耐性・トラブル対応',
+      tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく'] },
+    { title: 'リスク耐性・トラブル対応',
       questions: ['途中で仕様変更が入ったらどう対応しますか?', '他の案件と重なった場合はどうしますか?', '納期に間に合わなそうな場合、どう連絡しますか?'],
-      tips: ['トラブル時の報告・連絡・相談の方針を一言で言えるようにしておく']
-    },
-    {
-      title: 'クロージング・逆質問',
+      tips: ['トラブル時の報告・連絡・相談の方針を一言で言えるようにしておく'] },
+    { title: 'クロージング・逆質問',
       questions: ['何か質問はありますか?'],
-      tips: ['逆質問を2〜3個用意しておく(業務の進め方、チーム体制、評価基準など)']
-    }
+      tips: ['逆質問を2〜3個用意しておく(業務の進め方、チーム体制、評価基準など)'] }
   ];
 }
 
@@ -335,8 +307,7 @@ var KEYWORD_QUESTIONS = [
   { pattern: /単価|報酬|時給|月額|円/, index: 4, question: '募集要項に記載の金額感について、希望とのすり合わせをさせてください' },
   { pattern: /急募|即日|すぐ/, index: 3, question: '開始時期はいつから対応可能ですか?' },
   { pattern: /長期|継続/, index: 1, question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' },
-
-  { pattern: /HTML|CSS|コーディング|Shopify|Wordpress|WordPress|LP制作|サイト制作/, index: 2, question: 'コーディングやサイト制作の実績を、使用言語・CMSと合わせて教えてください' },
+  { pattern: /HTML|CSS|コーディング|Shopify|WordPress|Wordpress|LP制作|サイト制作/, index: 2, question: 'コーディングやサイト制作の実績を、使用言語・CMSと合わせて教えてください' },
   { pattern: /デザイン|Figma|UI|UX|バナー/, index: 2, question: '過去に手がけたデザインの実績を見せていただくことは可能ですか?' },
   { pattern: /マーケティング|広告運用|SNS運用|集客/, index: 2, question: '施策の効果を数値(CVR・CPAなど)で教えてください' },
   { pattern: /経理|記帳|請求書|会計/, index: 2, question: '利用したことのある会計ソフトや経理業務の範囲を教えてください' },
@@ -346,139 +317,292 @@ var KEYWORD_QUESTIONS = [
   { pattern: /事務|アシスタント|秘書/, index: 2, question: 'これまで担当した事務業務の範囲(対応ツール含む)を教えてください' }
 ];
 
-function generateHeuristic(jobContent) {
+function generateHeuristicQuestions(jobContent) {
   var categories = buildHeuristicCategories(jobContent);
   KEYWORD_QUESTIONS.forEach(function(kq) {
     if (kq.pattern.test(jobContent) && categories[kq.index].questions.indexOf(kq.question) === -1) {
       categories[kq.index].questions.push(kq.question);
     }
   });
-  return categories;
+  return { categories: categories, gaps: [] };
 }
 
-function generateProposalHeuristic(jobContent, profile) {
-  var jobExcerpt = excerpt(jobContent);
-  var profileText = (profile || '').trim();
-  var achievementsBlock = profileText || '[ここにご自身の実績・スキルを記入してください]';
-
+function generateHeuristicProposal(jobContent, profile) {
+  var achievements = (profile || '').trim() || '[ここにご自身の実績・スキルを記入してください]';
   return [
-    '拝啓',
-    '',
-    'この度は貴社の募集をご覧になり、ご連絡いたしました。',
-    '',
-    '募集内容を拝見し、「' + jobExcerpt + '」という点にお困りかと存じます。',
-    '',
+    '拝啓', '',
+    'この度は貴社の募集をご覧になり、ご連絡いたしました。', '',
+    '募集内容を拝見し、「' + excerpt(jobContent) + '」という点にお困りかと存じます。', '',
     '私にはこれまで、以下のような実績・経験がございます。',
-    achievementsBlock,
-    '',
+    achievements, '',
     'つきましては、以下のような進め方で貴社の課題解決に貢献できればと考えております。',
     '1. まずは現状のヒアリングと要件の整理を行います',
     '2. 整理した要件をもとに、具体的な進め方・スケジュールをご提案します',
-    '3. 実施しながら適宜認識合わせを行い、認識のズレを防ぎます',
-    '',
-    'これにより、業務の効率化や成果の向上に貢献できるものと考えております。',
-    '',
-    'ご不明点やご要望がございましたら、お気軽にお申し付けください。ご検討のほど、何卒よろしくお願いいたします。',
-    '',
+    '3. 実施しながら適宜認識合わせを行い、認識のズレを防ぎます', '',
+    'これにより、業務の効率化や成果の向上に貢献できるものと考えております。', '',
+    'ご不明点やご要望がございましたら、お気軽にお申し付けください。ご検討のほど、何卒よろしくお願いいたします。', '',
     '敬具'
   ].join('\n');
 }
 
-function renderResult(categories, proposal, sourceNote) {
-  var output = document.getElementById('output');
-  output.innerHTML = '';
+/* ---------- 表示 ---------- */
 
-  if (sourceNote) {
-    output.appendChild(el('p', { class: 'source-note' }, [sourceNote]));
+function showOutput(children) {
+  var output = $('output');
+  output.innerHTML = '';
+  children.forEach(function(c) { if (c) output.appendChild(c); });
+  output.style.display = 'block';
+  output.classList.remove('show');
+  requestAnimationFrame(function() { output.classList.add('show'); });
+  output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function quotaNote(quota) {
+  if (!quota) return null;
+  return el('p', { class: 'source-note' }, ['本日の利用回数: ' + quota.used + ' / ' + quota.limit]);
+}
+
+function questionsSection(result) {
+  var section = el('div', { class: 'section' }, [el('p', { class: 'section-title' }, ['面談で想定される質問'])]);
+
+  if (result.gaps && result.gaps.length) {
+    var gapBox = el('div', { class: 'category', style: 'padding-top:0;border-top:none' }, [
+      el('h3', {}, ['経歴から突っ込まれそうな点'])
+    ]);
+    result.gaps.forEach(function(g) {
+      gapBox.appendChild(el('div', { class: 'gap' }, [
+        el('p', {}, [g.point]),
+        el('p', { class: 'advice' }, [g.advice])
+      ]));
+    });
+    section.appendChild(gapBox);
   }
 
-  var questionSection = el('div', { class: 'section' }, [
-    el('p', { class: 'section-title' }, ['① 想定される質問']),
-  ]);
-  categories.forEach(function(c, i) {
-    var num = String(i + 1).padStart(2, '0');
-    var qList = el('ul', { class: 'questions' }, (c.questions || []).map(function(q) { return el('li', {}, [q]); }));
-    var tipList = el('ul', { class: 'tips' }, (c.tips || []).map(function(t) { return el('li', {}, [t]); }));
-
-    var card = el('div', { class: 'category' }, [
-      el('span', { class: 'index' }, [num]),
+  result.categories.forEach(function(c, i) {
+    section.appendChild(el('div', { class: 'category' }, [
+      el('span', { class: 'index' }, [String(i + 1).padStart(2, '0')]),
       el('h3', {}, [c.title]),
       el('h4', {}, ['想定される質問']),
-      qList,
+      el('ul', {}, (c.questions || []).map(function(q) { return el('li', {}, [q]); })),
       el('h4', {}, ['準備しておくとよいこと']),
-      tipList
-    ]);
-    questionSection.appendChild(card);
+      el('ul', { class: 'tips' }, (c.tips || []).map(function(t) { return el('li', {}, [t]); }))
+    ]));
   });
-  output.appendChild(questionSection);
+  return section;
+}
 
-  var copyBtn = el('button', { class: 'copy-btn' }, ['提案文をコピー']);
+function proposalSection(proposal) {
+  var copyBtn = el('button', { class: 'ghost', style: 'margin-top:1.25rem' }, ['提案文をコピー']);
   copyBtn.addEventListener('click', function() {
     navigator.clipboard.writeText(proposal).then(function() {
       copyBtn.textContent = 'コピーしました';
       setTimeout(function() { copyBtn.textContent = '提案文をコピー'; }, 2000);
     });
   });
-
-  var proposalSection = el('div', { class: 'section' }, [
-    el('p', { class: 'section-title' }, ['② 案件提案文(下書き)']),
+  return el('div', { class: 'section' }, [
+    el('p', { class: 'section-title' }, ['応募提案文(下書き)']),
     el('div', { class: 'proposal-text' }, [proposal]),
     copyBtn
   ]);
-  output.appendChild(proposalSection);
-
-  output.style.display = 'block';
-  requestAnimationFrame(function() { output.classList.add('show'); });
-  output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-async function generateWithAI(jobContent, profile) {
-  var res = await fetch(WORKER_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input: jobContent, profile: profile })
+function showClarify(questions, quota) {
+  var fields = questions.map(function(q) {
+    var ta = el('textarea', { rows: '3', placeholder: 'ご回答(わからなければ空欄でも構いません)' });
+    return { question: q, textarea: ta, node: el('div', { class: 'clarify-item' }, [el('p', {}, [q]), ta]) };
   });
-  var data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'AI解析に失敗しました');
-  return data;
+
+  var errorNode = el('p', { class: 'msg error' });
+  var submit = el('button', { class: 'primary' }, ['回答して提案文を作成']);
+  var skip = el('button', { class: 'ghost', style: 'margin-left:0.75rem' }, ['このまま作成']);
+
+  function send(answers) {
+    submit.disabled = true; skip.disabled = true;
+    run(answers).finally(function() { submit.disabled = false; skip.disabled = false; });
+  }
+  submit.addEventListener('click', function() {
+    var answers = fields
+      .map(function(f) { return { question: f.question, answer: f.textarea.value.trim() }; })
+      .filter(function(a) { return a.answer; });
+    if (!answers.length) { errorNode.textContent = '少なくとも1つ回答するか、「このまま作成」を選んでください'; return; }
+    send(answers);
+  });
+  skip.addEventListener('click', function() {
+    send([{ question: '追加情報', answer: '特になし。案件内容と経歴から判断して作成してください' }]);
+  });
+
+  showOutput([
+    quotaNote(quota),
+    el('div', { class: 'section' }, [
+      el('p', { class: 'section-title' }, ['より良い提案文にするため、教えてください']),
+      el('p', { class: 'hint' }, ['案件内容と経歴だけでは判断しきれない点です。']),
+      el('div', {}, fields.map(function(f) { return f.node; })),
+      errorNode,
+      el('div', { class: 'row' }, [submit, skip])
+    ])
+  ]);
 }
 
-document.getElementById('submit-btn').addEventListener('click', async function() {
-  var jobContent = document.getElementById('job-content').value.trim();
-  var profile = document.getElementById('profile').value.trim();
-  var errorEl = document.getElementById('form-error');
-  var statusEl = document.getElementById('status');
-  var btn = document.getElementById('submit-btn');
+/* ---------- ログイン・経歴 ---------- */
 
-  if (!jobContent) {
-    errorEl.textContent = '案件内容またはURLを入力してください';
-    errorEl.style.display = 'block';
+function renderAuth() {
+  if (!configured) {
+    $('auth-panel').classList.add('hidden');
+    $('profile-block').classList.remove('hidden');
+    var note = $('mode-note');
+    note.textContent = '簡易版で動作しています(ログイン・AI生成は未設定)。テンプレートとキーワード判定による下書きを作成します。案件のURLは読み込まれないため、本文を貼り付けてください。経歴は保存されません。';
+    note.classList.remove('hidden');
     return;
   }
-  errorEl.style.display = 'none';
+  $('auth-panel').classList.remove('hidden');
+  $('auth-out').classList.toggle('hidden', !!session);
+  $('auth-in').classList.toggle('hidden', !session);
+  $('profile-block').classList.toggle('hidden', !session);
+  if (session) $('auth-user').textContent = session.user.email + ' でログイン中';
+}
 
-  if (WORKER_URL) {
-    btn.disabled = true;
-    statusEl.textContent = /^https?:\/\//i.test(jobContent) ? 'URLを読み込んで解析しています…' : '案件内容を解析しています…';
-    statusEl.style.display = 'block';
-    try {
-      var data = await generateWithAI(jobContent, profile);
-      renderResult(data.categories, data.proposal, null);
-    } catch (e) {
-      statusEl.textContent = 'AI解析に失敗したため、簡易版を表示します(' + e.message + ')';
-      renderResult(generateHeuristic(jobContent), generateProposalHeuristic(jobContent, profile), null);
-      return;
-    } finally {
-      btn.disabled = false;
-    }
-    statusEl.style.display = 'none';
-  } else {
-    var note = /^https?:\/\//i.test(jobContent)
-      ? 'AIバックエンド未接続のため、URLの中身は読み込まず簡易版で表示しています。募集要項の本文を貼り付けると、より案件に沿った内容になります。'
-      : 'AIバックエンド未接続のため、簡易版(テンプレート)で表示しています。';
-    renderResult(generateHeuristic(jobContent), generateProposalHeuristic(jobContent, profile), note);
+async function loadProfile() {
+  var res = await sb.from('profiles').select('content').eq('user_id', session.user.id).maybeSingle();
+  if (res.error) { setMsg($('profile-msg'), '経歴の読み込みに失敗しました', true); return; }
+  savedProfile = res.data ? res.data.content : '';
+  $('profile').value = savedProfile;
+  if (!savedProfile) $('profile-panel').open = true;
+}
+
+async function saveProfile() {
+  var content = $('profile').value.trim();
+  var res = await sb.from('profiles').upsert({ user_id: session.user.id, content: content, updated_at: new Date().toISOString() });
+  if (res.error) {
+    setMsg($('profile-msg'), '保存に失敗しました(8,000文字以内にしてください)', true);
+    return false;
   }
+  savedProfile = content;
+  setMsg($('profile-msg'), '保存しました', false);
+  return true;
+}
+
+$('profile-save').addEventListener('click', function() { saveProfile(); });
+
+$('profile-delete').addEventListener('click', async function() {
+  if (!confirm('保存した経歴を削除しますか?')) return;
+  var res = await sb.from('profiles').delete().eq('user_id', session.user.id);
+  if (res.error) { setMsg($('profile-msg'), '削除に失敗しました', true); return; }
+  savedProfile = '';
+  $('profile').value = '';
+  setMsg($('profile-msg'), '削除しました', false);
 });
+
+$('auth-send').addEventListener('click', async function() {
+  var email = $('auth-email').value.trim();
+  if (!email) { setMsg($('auth-msg'), 'メールアドレスを入力してください', true); return; }
+  var btn = $('auth-send');
+  btn.disabled = true;
+  var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + location.pathname } });
+  btn.disabled = false;
+  if (res.error) { setMsg($('auth-msg'), 'メールの送信に失敗しました。時間をおいてお試しください', true); return; }
+  setMsg($('auth-msg'), 'ログイン用のリンクをメールで送信しました。メール内のリンクを開いてください。', false);
+});
+
+$('auth-logout').addEventListener('click', function() { sb.auth.signOut(); });
+
+/* ---------- 実行 ---------- */
+
+async function run(answers) {
+  var job = $('job-content').value.trim();
+  var mode = currentMode();
+  var errorEl = $('form-error');
+  var statusEl = $('status');
+
+  if (!job) {
+    setMsg(errorEl, '案件のURLまたはテキストを入力してください', true);
+    errorEl.classList.remove('hidden');
+    return;
+  }
+  errorEl.classList.add('hidden');
+
+  if (!configured) {
+    var profile = $('profile').value.trim();
+    if (mode === 'proposal') {
+      showOutput([proposalSection(generateHeuristicProposal(job, profile))]);
+    } else {
+      showOutput([questionsSection(generateHeuristicQuestions(job))]);
+    }
+    return;
+  }
+
+  if (!session) {
+    setMsg(errorEl, 'ログインしてください', true);
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  var content = $('profile').value.trim();
+  if (mode === 'proposal' && !content) {
+    setMsg(errorEl, '提案文の作成には経歴・実績が必要です。「あなたの経歴・実績」に入力してください', true);
+    errorEl.classList.remove('hidden');
+    $('profile-panel').open = true;
+    return;
+  }
+  if (content !== savedProfile && !(await saveProfile())) return;
+
+  var btn = $('submit-btn');
+  btn.disabled = true;
+  var isUrl = /^https?:\/\/\S+$/i.test(job);
+  setMsg(statusEl, answers && answers.length ? '提案文を作成しています…' : (isUrl ? 'URLを読み込んで作成しています…' : '作成しています…'), false);
+  statusEl.classList.remove('hidden');
+
+  try {
+    var res = await fetch(CONFIG.WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ mode: mode, input: job, answers: answers || [] })
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || '作成に失敗しました');
+
+    if (data.mode === 'questions') {
+      showOutput([quotaNote(data.quota), questionsSection(data)]);
+    } else if (data.status === 'need_info') {
+      showClarify(data.questions, data.quota);
+    } else {
+      showOutput([quotaNote(data.quota), proposalSection(data.proposal)]);
+    }
+    statusEl.classList.add('hidden');
+  } catch (e) {
+    setMsg(statusEl, e.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$('submit-btn').addEventListener('click', function() { run([]); });
+
+document.querySelectorAll('input[name="mode"]').forEach(function(r) {
+  r.addEventListener('change', function() {
+    document.querySelectorAll('.mode').forEach(function(m) {
+      m.classList.toggle('selected', m.querySelector('input').checked);
+    });
+  });
+});
+
+/* ---------- 初期化 ---------- */
+
+(async function init() {
+  if (configured) {
+    var res = await sb.auth.getSession();
+    session = res.data.session;
+    sb.auth.onAuthStateChange(function(_event, s) {
+      var changed = (s && s.user.id) !== (session && session.user.id);
+      session = s;
+      setTimeout(function() {
+        renderAuth();
+        if (changed) { if (s) loadProfile(); else { savedProfile = ''; $('profile').value = ''; } }
+      }, 0);
+    });
+    if (session) await loadProfile();
+  }
+  renderAuth();
+})();
 </script>
 </body>
 </html>

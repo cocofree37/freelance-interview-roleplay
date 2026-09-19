@@ -1,47 +1,29 @@
 # バックエンド(Cloudflare Worker)
 
-案件内容(またはURL)をClaude APIに渡し、案件に沿った想定質問を生成するAPIです。
-URLが渡された場合はWorker側でページ本文を取得し、その内容をもとに質問を作ります。
+ログイン済みユーザーのリクエストを受け、Claude APIで「応募提案文」または「面談の想定質問」を生成します。
+デプロイ手順は、リポジトリ直下の [SETUP.md](../SETUP.md) を参照してください。
 
-## 前提
+## API
 
-- Cloudflareアカウント(無料枠で動作します) → https://dash.cloudflare.com/sign-up
-- Anthropicの APIキー → https://console.anthropic.com/settings/keys で発行(利用量に応じて課金されます)
-- Node.js(インストール済み)
+`POST /` (ヘッダー `Authorization: Bearer <Supabaseのアクセストークン>`)
 
-## デプロイ手順
+| フィールド | 内容 |
+|---|---|
+| `mode` | `proposal`(応募提案文)/ `questions`(面談の想定質問) |
+| `input` | 案件のURL または テキスト。URLの場合はWorkerが本文を取得する |
+| `answers` | (proposalのみ)追加質問への回答 `[{question, answer}]` |
 
-1. wranglerをインストール(このディレクトリで実行)
+処理の流れ: Supabaseで本人確認と経歴の取得 → 利用回数の消費(上限超過は429)→ (URLなら)本文取得 → Claude呼び出し
 
-   ```bash
-   cd worker
-   npm install -g wrangler
-   ```
+- `questions`: `{ categories, gaps, quota }`(gaps = 経歴と案件のギャップから突っ込まれそうな点)
+- `proposal` の1回目: 情報が足りなければ `{ status: 'need_info', questions }`(最大3問)、十分なら `{ status: 'done', proposal }`
+- `proposal` に `answers` を付けた2回目: 必ず `{ status: 'done', proposal }`
 
-2. Cloudflareにログイン(ブラウザが開くので、そこで許可してください)
+## 設定
 
-   ```bash
-   wrangler login
-   ```
+| 種別 | 名前 | 設定場所 |
+|---|---|---|
+| シークレット | `ANTHROPIC_API_KEY` | `wrangler secret put ANTHROPIC_API_KEY` |
+| 変数 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | [wrangler.toml](wrangler.toml) |
 
-3. APIキーをシークレットとして登録(コマンド実行後にプロンプトが出るので、そこに貼り付けてください。ターミナルの履歴やこのファイルにキーを書かないこと)
-
-   ```bash
-   wrangler secret put ANTHROPIC_API_KEY
-   ```
-
-4. デプロイ
-
-   ```bash
-   wrangler deploy
-   ```
-
-   成功すると `https://freelance-interview-questions.<あなたのサブドメイン>.workers.dev` のようなURLが表示されます。
-
-5. 表示されたURLを、リポジトリ直下の `index.html` 内 `var WORKER_URL = '';` に設定して、再度pushしてください
-   (このURLを教えてもらえれば、私の方で設定してpushすることもできます)。
-
-## 注意
-
-- `src/index.js` 内の `ALLOWED_ORIGIN` は `https://cocofree37.github.io` に固定しています。別のオリジンから呼び出す場合は変更してください。
-- Claude APIの利用料はデプロイ後の利用量に応じて発生します。
+CORSは `src/index.js` の `ALLOWED_ORIGIN`(`https://cocofree37.github.io`)のみ許可しています。

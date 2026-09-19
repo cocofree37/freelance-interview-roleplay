@@ -4,3 +4,9 @@ compatibility_date = "2026-08-01"
 
 [observability]
 enabled = true
+
+# Supabaseプロジェクト作成後に設定してください(anon key は公開前提のキーで、RLSで保護されます)。
+# ANTHROPIC_API_KEY はここに書かず、`wrangler secret put ANTHROPIC_API_KEY` で登録します。
+[vars]
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
