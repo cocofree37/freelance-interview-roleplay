@@ -362,8 +362,15 @@ var SLIDE_COLORS = ['0E3A59', 'F57C00', '5B7B8F', '2E7D5B'];
 
 function slideLayout(g) {
   var known = ['cover', 'cards', 'stats', 'timeline', 'compare', 'bullets'];
-  if (known.indexOf(g.layout) !== -1) return g.layout;
-  return g.sections && g.sections.length ? 'cards' : 'bullets';
+  var hasSections = !!(g.sections && g.sections.length);
+  var hasBullets = !!(g.bullets && g.bullets.length);
+  var layout = known.indexOf(g.layout) !== -1 ? g.layout : (hasSections ? 'cards' : 'bullets');
+  // 中身がある側のレイアウトに寄せる(タイトルだけの空のスライドにしない)
+  if (layout !== 'cover') {
+    if (layout === 'bullets' && !hasBullets && hasSections) return 'cards';
+    if (layout !== 'bullets' && !hasSections && hasBullets) return 'bullets';
+  }
+  return layout;
 }
 
 // ---------- PowerPoint書き出し ----------
