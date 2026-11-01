@@ -75,9 +75,12 @@
         <p id="counter2" class="counter">0 / 2,000文字</p>
       </div>
       <p class="hint">応募文では、ここに書かれている事実だけを使います。書かれていないことは作り足しません。</p>
-      <div class="row">
-        <button id="profile-save" class="ghost" type="button">保存する</button>
-        <span id="saved-at" class="msg" style="margin:0"></span>
+      <div class="save-bar">
+        <button id="profile-save" class="primary" type="button">プロフィールを保存する</button>
+        <div class="save-info">
+          <span id="save-state" class="save-state"></span>
+          <span id="saved-at" class="save-time"></span>
+        </div>
       </div>
       <p id="profile-msg" class="msg"></p>
     </section>
@@ -161,10 +164,21 @@ function formValues() {
   };
 }
 
+var everSaved = false; // 一度でも保存済み(保存された行がある)か
+
 function isDirty() {
   if (!saved) return false;
   var v = formValues();
   return Object.keys(v).some(function(k) { return v[k] !== saved[k]; });
+}
+
+// 保存ボタンの横に、いまの状態(未保存の変更あり/保存済み)を出す
+function updateSaveState() {
+  var node = $('save-state');
+  var dirty = isDirty();
+  node.textContent = dirty ? '● 未保存の変更があります' : (everSaved ? '✓ 保存済みです' : 'まだ保存していません');
+  node.className = 'save-state' + (dirty ? ' is-dirty' : (everSaved ? ' is-saved' : ''));
+  $('profile-save').classList.toggle('attention', dirty);
 }
 
 function updateCounters() {
@@ -196,12 +210,15 @@ async function loadProfile() {
   $('conditions').value = row.conditions || '';
   updateCounters();
   saved = formValues();
-  setMsg($('saved-at'), res.data ? '最終保存: ' + new Date(res.data.updated_at).toLocaleString('ja-JP') : '未保存', false);
+  everSaved = !!res.data;
+  $('saved-at').textContent = res.data ? '最終保存: ' + new Date(res.data.updated_at).toLocaleString('ja-JP') : '';
+  updateSaveState();
   return true;
 }
 
-$('profile').addEventListener('input', function() { updateCounters(); setMsg($('profile-msg'), '', false); });
-$('conditions').addEventListener('input', function() { updateCounters(); setMsg($('profile-msg'), '', false); });
+['full-name', 'headline', 'profile', 'conditions'].forEach(function(id) {
+  $(id).addEventListener('input', function() { updateCounters(); setMsg($('profile-msg'), '', false); updateSaveState(); });
+});
 
 $('profile-save').addEventListener('click', async function() {
   var v = formValues();
@@ -209,14 +226,20 @@ $('profile-save').addEventListener('click', async function() {
   if (v.conditions.length > LIMITS.conditions) { setMsg($('profile-msg'), '希望条件は' + LIMITS.conditions.toLocaleString() + '文字以内にしてください', true); return; }
   if (!saved) { setMsg($('profile-msg'), 'プロフィールを読み込めていないため保存できません。ページを再読み込みしてください', true); return; }
   var btn = $('profile-save');
+  var label = 'プロフィールを保存する';
   btn.disabled = true;
+  btn.textContent = '保存しています…';
   var now = new Date();
   var res = await sb.from('profiles').upsert(Object.assign({ user_id: session.user.id, updated_at: now.toISOString() }, v));
   btn.disabled = false;
-  if (res.error) { setMsg($('profile-msg'), '保存に失敗しました。時間をおいて再度お試しください', true); return; }
+  if (res.error) { btn.textContent = label; setMsg($('profile-msg'), '保存に失敗しました。時間をおいて再度お試しください', true); return; }
   saved = v;
-  setMsg($('profile-msg'), '保存しました', false);
-  setMsg($('saved-at'), '最終保存: ' + now.toLocaleString('ja-JP'), false);
+  everSaved = true;
+  setMsg($('profile-msg'), '', false);
+  $('saved-at').textContent = '最終保存: ' + now.toLocaleString('ja-JP');
+  updateSaveState();
+  btn.textContent = '✓ 保存しました';
+  setTimeout(function() { btn.textContent = label; }, 2500);
 });
 
 /* ---------- ファイル ---------- */
