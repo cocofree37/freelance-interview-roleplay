@@ -309,6 +309,9 @@ button.primary {
   transition: background 0.2s ease;
 }
 button.primary:hover { background: var(--navy-deep); }
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; }
+.actions button { margin-top: 0; }
 button:disabled { opacity: 0.45; cursor: default; }
 
 button.ghost,
@@ -610,6 +613,7 @@ button.danger:hover { background: #fdf2f2; border-color: #d99; }
   .block { padding: 24px 20px; }
   .category, .answer, .section, .assessment { padding: 24px 20px; }
   button.primary { width: 100%; }
+  .actions button.ghost { width: 100%; }
   .tabs { display: flex; }
   .tab { flex: 1; padding: 10px 8px; font-size: 13px; }
 }

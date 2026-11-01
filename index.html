@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>案件面談 準備アシスト</title>
+<title>案件ブリーフ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" />
@@ -12,7 +12,7 @@
 </head>
 <body>
 <nav class="site-nav" aria-label="メニュー">
-  <a class="brand" href="./">準備アシスト</a>
+  <a class="brand" href="./">案件ブリーフ</a>
   <div id="bar-guest" class="nav-actions hidden">
     <span class="nav-status"><strong>ゲストモード</strong><small>入力内容は保存されません</small></span>
     <button id="open-login" class="nav-btn" type="button">ログイン / 登録</button>
@@ -122,7 +122,10 @@
   </section>
 
   <div id="form-error" class="msg error hidden"></div>
-  <button id="submit-btn" class="primary" type="button">作成する</button>
+  <div class="actions">
+    <button id="submit-btn" class="primary" type="button">作成する</button>
+    <button id="reset-btn" class="ghost" type="button">リセット</button>
+  </div>
   <p id="status" class="msg hidden"></p>
 
   <div id="output"></div>
@@ -130,7 +133,7 @@
 
 <footer class="site-footer">
   <div class="footer-inner">
-    <p class="footer-brand">準備アシスト</p>
+    <p class="footer-brand">案件ブリーフ</p>
     <p class="footer-desc">フリーランス・複業の案件応募と面談の準備を、AIで支援します。</p>
     <div class="footer-notes">
       <p>入力した案件・プロフィール・経歴は、文章の生成のためAI(Anthropic Claude)に送信されます。ゲストの内容は保存されません。ログインした場合のみ、プロフィールと職務経歴書が本人だけが見られる形で保存され、マイページからいつでも削除できます。</p>
@@ -609,6 +612,30 @@ async function run(opts) {
 }
 
 $('submit-btn').addEventListener('click', function() { run(); });
+
+// 入力欄・選択・結果を最初の状態に戻す(ログイン中のプロフィールや保存済みファイルには触れない)
+$('reset-btn').addEventListener('click', function() {
+  if (running) return;
+  var touched = $('job').value.trim() || $('guest-text').value.trim() || $('form-items').value.trim() || state.result;
+  if (touched && !confirm('入力した内容と作成結果を消去します。よろしいですか?')) return;
+  $('job').value = '';
+  $('guest-text').value = '';
+  $('form-items').value = '';
+  setMsg($('guest-file-msg'), '', false);
+  document.querySelector('input[name="output"][value="proposal"]').checked = true;
+  state.result = null;
+  state.formItems = [];
+  state.tab = null;
+  state.lastCost = 0;
+  $('output').innerHTML = '';
+  $('output').style.display = 'none';
+  $('output').classList.remove('show');
+  $('status').classList.add('hidden');
+  $('form-error').classList.add('hidden');
+  updateCost();
+  updateBanner();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 document.querySelectorAll('input[name="output"]').forEach(function(c) { c.addEventListener('change', updateCost); });
 
 /* ---------- 初期化 ---------- */
