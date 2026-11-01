@@ -33,6 +33,19 @@
 </header>
 
 <main class="wrap">
+  <section id="mode-banner" class="mode-banner hidden" aria-live="polite">
+    <div class="mb-head">
+      <span class="mb-badge" id="mb-badge"></span>
+      <span class="mb-title" id="mb-title"></span>
+    </div>
+    <p class="mb-note" id="mb-note"></p>
+    <div class="mb-usage">
+      <span class="mb-usage-label">利用回数</span>
+      <span class="mb-usage-main" id="mb-usage-main"></span>
+      <span class="mb-usage-sub" id="mb-usage-sub"></span>
+    </div>
+  </section>
+
   <section id="login-panel" class="block hidden">
     <span class="eyebrow">Login</span>
     <label class="field-label" for="auth-email">ログイン</label>
@@ -76,29 +89,28 @@
 
   <section class="block">
     <span class="eyebrow">03 · Output</span>
-    <span class="field-label">作成するもの</span>
-    <div class="modes" id="choices">
+    <span class="field-label">作成するもの(1つ選んでください)</span>
+    <div class="modes" id="choices" role="radiogroup" aria-label="作成するもの">
       <label class="mode selected">
-        <input type="checkbox" name="output" value="proposal" checked />
+        <input type="radio" name="output" value="proposal" checked />
+        <span class="mode-check" aria-hidden="true"></span>
         <span class="mode-title">応募文</span>
         <span class="mode-desc">案件と経歴から、そのまま送れる応募文を作成します</span>
       </label>
-      <label class="mode selected">
-        <input type="checkbox" name="output" value="interview" checked />
+      <label class="mode">
+        <input type="radio" name="output" value="interview" />
+        <span class="mode-check" aria-hidden="true"></span>
         <span class="mode-title">面談資料</span>
         <span class="mode-desc">想定質問と回答の骨子、突っ込まれそうな点をまとめます</span>
       </label>
-      <label class="mode selected">
-        <input type="checkbox" name="output" value="hearing" checked />
+      <label class="mode">
+        <input type="radio" name="output" value="hearing" />
+        <span class="mode-check" aria-hidden="true"></span>
         <span class="mode-title">ヒアリングテキスト</span>
         <span class="mode-desc">案件の不明点を聞く質問と、自分が話すことを整理します</span>
       </label>
     </div>
-    <div class="usage-box">
-      <span class="usage-title">利用回数について</span>
-      <span class="usage-now" id="cost"></span>
-      <span class="usage-note" id="usage-note"></span>
-    </div>
+    <p class="hint" id="cost">選んだものを1回の作成で作ります。ほかも作りたいときは、選び直してもう一度作成してください。</p>
   </section>
 
   <section class="block" id="form-items-block">
@@ -177,21 +189,27 @@ function selectedOutputs() {
 
 function updateCost() {
   var picked = selectedOutputs();
-  var now = $('cost');
-  now.textContent = '';
-  if (picked.length) {
-    now.appendChild(document.createTextNode('今回の作成で使う利用回数: '));
-    now.appendChild(el('b', {}, [String(picked.length)]));
-    now.appendChild(document.createTextNode(' 回'));
-  } else {
-    now.textContent = '作成するものを1つ以上選んでください。';
-  }
-  $('usage-note').textContent = '作成するものを1つ選ぶごとに、1日の利用回数を1回分使います。1日の上限は、'
-    + (session ? 'ログイン中は15回' : 'ゲストは9回(ログインすると15回)') + 'です。';
   $('form-items-block').classList.toggle('hidden', picked.indexOf('proposal') === -1);
   document.querySelectorAll('#choices .mode').forEach(function(m) {
     m.classList.toggle('selected', m.querySelector('input').checked);
   });
+}
+
+// ページ冒頭の、ゲスト/ログインの表示と利用回数
+function updateBanner() {
+  var banner = $('mode-banner');
+  var q = state.result && state.result.quota;
+  var limit = session ? 15 : 9;
+  banner.classList.remove('hidden');
+  banner.classList.toggle('is-account', !!session);
+  $('mb-badge').textContent = session ? 'ログイン中' : 'ゲストモード';
+  $('mb-title').textContent = session ? 'プロフィールと職務経歴書が保存され、作成に反映されます' : '入力した内容は保存されません';
+  $('mb-note').textContent = session
+    ? '保存した内容は、マイページからいつでも編集・削除できます。'
+    : 'ログインすると、プロフィールや職務経歴書を保存でき、毎回の入力が不要になります。';
+  $('mb-usage-main').textContent = q ? '本日 ' + q.used + ' / ' + q.limit + ' 回 使用済み' : '1日 ' + limit + ' 回まで';
+  $('mb-usage-sub').textContent = '1回の作成で1回分を使います'
+    + (session ? '' : '(ログインすると1日15回まで)');
 }
 
 /* ---------- 応募フォームの項目 ---------- */
@@ -434,11 +452,9 @@ function showResults() {
 
   var output = $('output');
   output.innerHTML = '';
-  if (data.quota) {
-    output.appendChild(el('p', { class: 'source-note' }, [(data.quota.mode === 'guest' ? 'ゲスト' : 'ログイン中') + ': 本日の利用 ' + data.quota.used + ' / ' + data.quota.limit + '回']));
-  }
+  updateBanner();
   if (data.assessment) output.appendChild(assessmentCard(data.assessment));
-  output.appendChild(tabs);
+  if (keys.length > 1) output.appendChild(tabs);
   output.appendChild(body);
   if (data.confirmations && data.confirmations.length) {
     output.appendChild(confirmationsSection(data.confirmations, state.lastCost || keys.length));
@@ -453,6 +469,7 @@ function showResults() {
 function renderMode() {
   var loggedIn = !!session;
   updateCost();
+  updateBanner();
   $('bar-guest').classList.toggle('hidden', loggedIn);
   $('bar-account').classList.toggle('hidden', !loggedIn);
   $('guest-profile').classList.toggle('hidden', loggedIn);
@@ -538,7 +555,7 @@ async function run(opts) {
   $('form-error').classList.add('hidden');
   if (!configured) { showError('現在ご利用いただけません。しばらくしてからお試しください'); return; }
   if (!job) { showError('案件のURLを入力してください'); return; }
-  if (!outputs.length) { showError('作成するものを1つ以上選んでください'); return; }
+  if (!outputs.length) { showError('作成するものを1つ選んでください'); return; }
 
   var guestText = session ? '' : $('guest-text').value.trim();
   if (!session && outputs.indexOf('proposal') !== -1 && !guestText) {
