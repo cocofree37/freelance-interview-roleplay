@@ -4,47 +4,58 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>案件面談 準備アシスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" />
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="wrap">
-  <p class="eyebrow">Interview Preparation</p>
-  <h1>案件面談<br />準備アシスト</h1>
-  <p class="lead">案件のURLを入れて、作りたいものを選ぶだけ。応募文、面談資料、ヒアリングテキストを、あなたの経歴を踏まえて作成します。</p>
-
-  <div class="mode-bar" id="mode-bar">
-    <div id="bar-guest" class="hidden" style="display:contents">
-      <span class="mode-badge">ゲストモード</span>
-      <span class="mode-note">入力した内容は保存されません。ログインすると、プロフィールと職務経歴書を保存できます。</span>
-      <button id="open-login" class="ghost">ログイン</button>
-    </div>
-    <div id="bar-account" class="hidden" style="display:contents">
-      <span class="mode-badge">ログイン中</span>
-      <span class="mode-note" id="user-label"></span>
-      <a class="ghost-link" href="mypage.html">マイページ</a>
-      <button id="auth-logout" class="ghost">ログアウト</button>
-    </div>
+<nav class="site-nav" aria-label="メニュー">
+  <a class="brand" href="./">準備アシスト</a>
+  <div id="bar-guest" class="nav-actions hidden">
+    <span class="nav-note">ゲストモード(保存されません)</span>
+    <button id="open-login" class="nav-btn" type="button">ログイン</button>
   </div>
+  <div id="bar-account" class="nav-actions hidden">
+    <span class="nav-note" id="user-label"></span>
+    <a class="nav-btn" href="mypage.html">マイページ</a>
+    <button id="auth-logout" class="nav-link" type="button">ログアウト</button>
+  </div>
+</nav>
 
-  <div id="login-panel" class="block hidden" style="margin-top:-1.5rem;margin-bottom:3rem">
-    <label class="field-label">ログイン(メールに届くリンクを開くだけです)</label>
-    <div class="row" style="margin-top:0">
+<header class="hero">
+  <div class="hero-inner">
+    <span class="hero-pill">INTERVIEW PREP</span>
+    <h1>Ready to <span class="grad">Apply.</span></h1>
+    <p class="hero-lead">案件のURLを入れて、作りたいものを選ぶだけ。応募文、面談資料、ヒアリングテキストを、あなたの経歴を踏まえて作成します。</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="login-panel" class="block hidden">
+    <span class="eyebrow">Login</span>
+    <label class="field-label" for="auth-email">ログイン</label>
+    <p class="hint" style="margin-top:0">メールに届くリンクを開くだけです。ログインすると、プロフィールと職務経歴書を保存できます。</p>
+    <div class="row">
       <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
-      <button id="auth-send" class="ghost">ログインリンクを送る</button>
+      <button id="auth-send" class="ghost" type="button">ログインリンクを送る</button>
     </div>
     <p id="auth-msg" class="msg"></p>
-  </div>
+  </section>
 
-  <div class="block" style="margin-top:0">
+  <section class="block">
+    <span class="eyebrow">01 · Job</span>
     <label class="field-label" for="job">案件のURL</label>
     <textarea id="job" rows="3" placeholder="案件ページのURLを貼り付け"></textarea>
     <p class="hint">ページの本文を自動で取得します。ログインが必要なページなどで取得できない場合は、案件の本文をここに貼り付けてください。</p>
-  </div>
+  </section>
 
-  <div class="block" id="guest-profile">
-    <label class="field-label" for="guest-text">あなたのプロフィール・経歴(ゲストは保存されません)</label>
+  <section class="block" id="guest-profile">
+    <span class="eyebrow">02 · Profile</span>
+    <label class="field-label" for="guest-text">あなたのプロフィール・経歴</label>
     <textarea id="guest-text" rows="6" placeholder="経歴・実績(数値があれば具体的に)・得意分野・稼働条件などを貼り付け。応募文の作成には必要です。"></textarea>
+    <p class="hint" style="margin-top:8px">ゲストモードでは保存されません。ログインすると、一度登録すれば毎回の入力が不要になります。</p>
     <div class="row">
       <label class="upload-label">
         職務経歴書などを読み込む(PDF・Word・テキスト)
@@ -52,20 +63,20 @@
       </label>
     </div>
     <p id="guest-file-msg" class="hint"></p>
-  </div>
+  </section>
 
-  <div class="block hidden" id="account-profile">
+  <section class="block hidden" id="account-profile">
+    <span class="eyebrow">02 · Profile</span>
+    <span class="field-label">あなたのプロフィール・職務経歴書</span>
     <div class="summary-box">
-      <div>
-        <span class="field-label" style="margin:0 0 0.4rem">あなたのプロフィール・職務経歴書</span>
-        <span id="profile-status" class="summary-text"></span>
-      </div>
+      <span id="profile-status" class="summary-text"></span>
       <a class="ghost-link" id="profile-link" href="mypage.html">マイページで編集</a>
     </div>
-  </div>
+  </section>
 
-  <div class="block">
-    <label class="field-label">作成するもの(選んだ数だけ利用回数を消費します)</label>
+  <section class="block">
+    <span class="eyebrow">03 · Output</span>
+    <span class="field-label">作成するもの</span>
     <div class="modes" id="choices">
       <label class="mode selected">
         <input type="checkbox" name="output" value="proposal" checked />
@@ -84,25 +95,33 @@
       </label>
     </div>
     <p id="cost" class="hint"></p>
-  </div>
+  </section>
 
-  <div class="block" id="form-items-block">
+  <section class="block" id="form-items-block">
+    <span class="eyebrow">04 · Form</span>
     <label class="field-label" for="form-items">応募フォームの入力項目(任意)</label>
     <textarea id="form-items" rows="4" placeholder="1行に1項目。例:&#10;必要要件に関する自己アピール(必須)&#10;歓迎要件に関する自己アピール&#10;意気込み・その他自己アピール(400文字)"></textarea>
     <p class="hint">応募フォームに入力欄が複数ある場合は、項目名を貼り付けると、項目ごとに書き分けます。文字数の上限は「(400文字)」のように書くと、その範囲に収めます。空欄の場合は、1通の応募文を作成します。</p>
-  </div>
+  </section>
 
   <div id="form-error" class="msg error hidden"></div>
-  <button id="submit-btn" class="primary">作成する</button>
+  <button id="submit-btn" class="primary" type="button">作成する</button>
   <p id="status" class="msg hidden"></p>
 
   <div id="output"></div>
+</main>
 
-  <footer class="note">
-    <p>入力した案件・プロフィール・経歴は、文章の生成のためAI(Anthropic Claude)に送信されます。ゲストの内容は保存されません。ログインした場合のみ、プロフィールと職務経歴書が本人だけが見られる形で保存され、マイページからいつでも削除できます。</p>
-    <p>生成される文章はあくまで下書きです。内容の正確性をご自身で確認のうえ、ご利用ください。</p>
-  </footer>
-</div>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand">準備アシスト</p>
+    <p class="footer-desc">フリーランス・複業の案件応募と面談の準備を、AIで支援します。</p>
+    <div class="footer-notes">
+      <p>入力した案件・プロフィール・経歴は、文章の生成のためAI(Anthropic Claude)に送信されます。ゲストの内容は保存されません。ログインした場合のみ、プロフィールと職務経歴書が本人だけが見られる形で保存され、マイページからいつでも削除できます。</p>
+      <p>生成される文章はあくまで下書きです。内容の正確性をご自身で確認のうえ、ご利用ください。</p>
+    </div>
+    <p class="footer-copy">© 2026 <a href="https://cocofree.jp/" style="text-decoration:none">COCOFREE</a></p>
+  </div>
+</footer>
 
 <script src="config.js"></script>
 <script src="extract.js"></script>
@@ -181,7 +200,7 @@ function countText(text) {
 /* ---------- 結果の表示 ---------- */
 
 function copyButton(label, getText, style) {
-  var btn = el('button', { class: 'ghost', type: 'button', style: style || 'margin-top:1.5rem' }, [label]);
+  var btn = el('button', { class: 'ghost', type: 'button', style: style || 'margin-top:20px' }, [label]);
   btn.addEventListener('click', function() {
     navigator.clipboard.writeText(getText()).then(function() {
       btn.textContent = 'コピーしました';
@@ -255,14 +274,14 @@ function proposalPanel(p) {
 function interviewPanel(r) {
   var box = el('div', {});
   if (r.gaps && r.gaps.length) {
-    var gapBox = el('div', { class: 'category', style: 'padding-top:0;border-top:none' }, [el('h3', {}, ['経歴から突っ込まれそうな点'])]);
+    var gapBox = el('div', { class: 'category' }, [el('h3', {}, ['経歴から突っ込まれそうな点'])]);
     r.gaps.forEach(function(g) {
       gapBox.appendChild(el('div', { class: 'gap' }, [el('p', {}, [g.point]), el('p', { class: 'advice' }, [g.advice])]));
     });
     box.appendChild(gapBox);
   }
   if (r.scripts && r.scripts.length) {
-    var scriptBox = el('div', { class: 'category', style: r.gaps && r.gaps.length ? '' : 'padding-top:0;border-top:none' }, [el('h3', {}, ['回答の骨子'])]);
+    var scriptBox = el('div', { class: 'category' }, [el('h3', {}, ['回答の骨子'])]);
     r.scripts.forEach(function(s) {
       scriptBox.appendChild(el('div', { class: 'qa' }, [el('p', { class: 'q' }, [s.question]), list(s.outline, 'tips')]));
     });
@@ -355,7 +374,7 @@ function confirmationsSection(items, cost) {
     };
   });
   var errorNode = el('p', { class: 'msg error' });
-  var go = el('button', { class: 'ghost', type: 'button', style: 'margin-top:1.5rem' }, ['回答を反映して作り直す(' + cost + '回分を消費)']);
+  var go = el('button', { class: 'ghost', type: 'button', style: 'margin-top:20px' }, ['回答を反映して作り直す(' + cost + '回分を消費)']);
   go.addEventListener('click', function() {
     var answers = fields.map(function(f) { return { question: f.question, answer: f.textarea.value.trim() }; }).filter(function(a) { return a.answer; });
     if (!answers.length) { errorNode.textContent = '回答を1つ以上入力してください'; return; }
@@ -363,7 +382,7 @@ function confirmationsSection(items, cost) {
   });
   return el('div', { class: 'section' }, [
     el('p', { class: 'section-title' }, ['確認したいこと']),
-    el('p', { class: 'hint', style: 'margin-top:-1rem;margin-bottom:1rem' }, ['事実が確認できないものは、本文に書かずにいます。答えられるものだけで構いません。回答すると、本文に反映して作り直せます。']),
+    el('p', { class: 'hint' }, ['事実が確認できないものは、本文に書かずにいます。答えられるものだけで構いません。回答すると、本文に反映して作り直せます。']),
     el('div', {}, fields.map(function(f) { return f.node; })),
     errorNode,
     go

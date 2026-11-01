@@ -4,41 +4,59 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>マイページ | 案件面談 準備アシスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" />
 <link rel="stylesheet" href="style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="wrap">
-  <a class="back-link" href="./">← 案件の準備に戻る</a>
-  <p class="eyebrow">My Page</p>
-  <h1>マイページ</h1>
-  <p class="lead">プロフィールと職務経歴書を保存しておくと、案件ごとに入力しなくても、応募文・面談資料・ヒアリングテキストに反映されます。</p>
+<nav class="site-nav" aria-label="メニュー">
+  <a class="brand" href="./">準備アシスト</a>
+  <div class="nav-actions">
+    <a class="nav-btn" href="./">案件の準備へ</a>
+  </div>
+</nav>
 
-  <div id="unavailable" class="msg hidden">この機能は現在ご利用いただけません。</div>
+<header class="hero compact">
+  <div class="hero-inner">
+    <span class="hero-pill">MY PAGE</span>
+    <h1>Your <span class="grad">Profile.</span></h1>
+    <p class="hero-lead">プロフィールと職務経歴書を保存しておくと、案件ごとに入力しなくても、応募文・面談資料・ヒアリングテキストに反映されます。</p>
+  </div>
+</header>
 
-  <div id="auth-out" class="hidden">
-    <label class="field-label">ログイン(メールに届くリンクを開くだけです)</label>
-    <div class="row" style="margin-top:0">
+<main class="wrap">
+  <div id="unavailable" class="block hidden">この機能は現在ご利用いただけません。</div>
+
+  <section id="auth-out" class="block hidden">
+    <span class="eyebrow">Login</span>
+    <label class="field-label" for="auth-email">ログイン</label>
+    <p class="hint" style="margin-top:0">メールに届くリンクを開くだけです。</p>
+    <div class="row">
       <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
-      <button id="auth-send" class="ghost">ログインリンクを送る</button>
+      <button id="auth-send" class="ghost" type="button">ログインリンクを送る</button>
     </div>
     <p id="auth-msg" class="msg"></p>
-  </div>
+  </section>
 
   <div id="mypage" class="hidden">
-    <div class="mypage-section">
-      <h2>アカウント</h2>
+    <section class="block">
+      <span class="eyebrow">Account</span>
+      <h2 class="card-title">アカウント</h2>
       <div class="row" style="margin-top:0">
-        <span id="account-email" class="msg" style="margin:0"></span>
-        <button id="auth-logout" class="ghost">ログアウト</button>
+        <span id="account-email" class="summary-text"></span>
+        <button id="auth-logout" class="ghost" type="button">ログアウト</button>
       </div>
-    </div>
+    </section>
 
-    <div class="mypage-section">
-      <h2>プロフィール</h2>
+    <section class="block">
+      <span class="eyebrow">Profile</span>
+      <h2 class="card-title">プロフィール</h2>
       <div class="field">
-        <label class="field-label" for="full-name">氏名(応募文の署名に使います)</label>
+        <label class="field-label" for="full-name">氏名</label>
         <input type="text" id="full-name" maxlength="100" autocomplete="name" />
+        <p class="hint" style="margin-top:8px">応募文の署名に使います。</p>
       </div>
       <div class="field">
         <label class="field-label" for="headline">職種・肩書</label>
@@ -56,16 +74,17 @@
       </div>
       <p class="hint">応募文では、ここに書かれている事実だけを使います。書かれていないことは作り足しません。</p>
       <div class="row">
-        <button id="profile-save" class="ghost">保存する</button>
+        <button id="profile-save" class="ghost" type="button">保存する</button>
         <span id="saved-at" class="msg" style="margin:0"></span>
       </div>
       <p id="profile-msg" class="msg"></p>
-    </div>
+    </section>
 
-    <div class="mypage-section">
-      <h2>職務経歴書などのファイル</h2>
+    <section class="block">
+      <span class="eyebrow">Files</span>
+      <h2 class="card-title">職務経歴書などのファイル</h2>
       <p class="hint" style="margin-top:0">PDF・Word(.docx)・テキスト(.txt/.md)、1ファイル5MBまで、5件まで。原本は本人だけが見られる領域に保存し、AIには取り出した文字だけを使います。画像だけのPDFは文字を取り出せません。</p>
-      <div id="files"></div>
+      <div id="files" style="margin-top:16px"></div>
       <div class="row">
         <label class="upload-label">
           ファイルを追加
@@ -73,19 +92,28 @@
         </label>
       </div>
       <p id="file-msg" class="msg"></p>
-    </div>
+    </section>
 
-    <div class="mypage-section">
-      <h2>データの管理</h2>
+    <section class="block">
+      <span class="eyebrow">Data</span>
+      <h2 class="card-title">データの管理</h2>
       <p class="hint" style="margin-top:0">保存したデータは、案件の作成を実行したときのみ、文章の生成のためAI(Anthropic Claude)に送信されます。</p>
       <div class="row">
-        <button id="delete-all" class="ghost danger">プロフィールとファイルをすべて削除</button>
+        <button id="delete-all" class="ghost danger" type="button">プロフィールとファイルをすべて削除</button>
       </div>
       <p id="delete-msg" class="msg"></p>
       <p class="hint">アカウント自体の削除をご希望の場合は、運営者までご連絡ください。</p>
-    </div>
+    </section>
   </div>
-</div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-brand">準備アシスト</p>
+    <p class="footer-desc">フリーランス・複業の案件応募と面談の準備を、AIで支援します。</p>
+    <p class="footer-copy">© 2026 <a href="https://cocofree.jp/" style="text-decoration:none">COCOFREE</a></p>
+  </div>
+</footer>
 
 <script src="config.js"></script>
 <script src="extract.js"></script>
