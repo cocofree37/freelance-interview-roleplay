@@ -60,10 +60,13 @@
 
   <section class="block">
     <span class="eyebrow">01 · Job</span>
-    <label class="field-label" for="job">案件の内容</label>
+    <div class="field-head">
+      <label class="field-label" for="job">案件の内容</label>
+      <button id="demo-btn" class="demo-btn" type="button">サンプルを入力して試す</button>
+    </div>
     <textarea id="job" rows="10" placeholder="募集ページの本文をコピーして貼り付け
 (業務内容、必須・歓迎スキル、稼働条件、単価、募集背景など)"></textarea>
-    <p class="hint">募集ページの本文を、そのままコピーして貼り付けてください。条件や求めるスキルまで含めるほど、内容が具体的になります。</p>
+    <p class="hint">募集ページの本文を、そのままコピーして貼り付けてください。条件や求めるスキルまで含めるほど、内容が具体的になります。「サンプルを入力して試す」では、架空の案件とプロフィールが入ります(作成すると、通常どおり利用回数を1回使います)。</p>
   </section>
 
   <section class="block" id="guest-profile">
@@ -670,6 +673,28 @@ async function run(opts) {
 }
 
 $('submit-btn').addEventListener('click', function() { run(); });
+
+/* ---------- サンプル入力(デモ。架空の内容です) ---------- */
+
+var DEMO = {
+  job: '【案件名】ECサイトの商品登録・運用改善サポート\n\n■業務内容\n・Shopifyストアへの商品登録、商品ページの改善\n・在庫・価格の更新、キャンペーン設定\n・月次の売上レポート作成と改善提案\n\n■必須スキル\n・Shopifyの運用経験(1年以上)\n・Excel/スプレッドシートでの集計\n\n■歓迎スキル\n・広告運用(Google/Meta)の知識\n・画像編集(Photoshop/Canva)\n\n■稼働条件\n・週10時間程度、リモート可(月1回の定例会のみオンライン参加)\n・報酬: 月額12万円\n・期間: 3ヶ月〜(長期想定)\n\n■募集背景\n創業5年の雑貨ブランド。商品数が増え、運用が担当者1名に偏っているため、運用を任せられるパートナーを探しています。',
+  profile: 'Webサイト制作を中心に活動する個人事業主(経験6年)。\n\n【得意分野】\n・Shopifyストアの運用・改善(3年。商品登録、ページ改善、在庫・価格管理、月次レポート)\n・WordPressによる企業サイトの制作\n・スプレッドシートでの集計・レポート作成\n\n【実績】\n・雑貨ストアのShopify運用を3年担当。商品ページの改善により、対象ページの購入率が約1.3倍に向上\n・月次レポートの作成を自動化し、作業時間を月6時間から1時間に短縮\n\n【稼働条件】\n・平日夜と土日で、週8〜12時間\n・リモート希望(オンライン面談可)',
+  form: '必要要件に関する自己アピール(必須)\n歓迎要件に関する自己アピール\n意気込み・その他自己アピール(400文字)'
+};
+
+$('demo-btn').addEventListener('click', function() {
+  if (running) return;
+  var filled = $('job').value.trim() || (!session && $('guest-text').value.trim());
+  if (filled && !confirm('入力済みの内容を、サンプルで置き換えます。よろしいですか?')) return;
+  $('job').value = DEMO.job;
+  // ログイン中は、保存済みのプロフィールを使うため、案件と応募フォームの項目だけを入れる
+  if (!session) $('guest-text').value = DEMO.profile;
+  $('form-items').value = DEMO.form;
+  document.querySelector('input[name="output"][value="proposal"]').checked = true;
+  $('form-error').classList.add('hidden');
+  updateCost();
+  $('submit-btn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
 
 // 入力欄・選択・結果を最初の状態に戻す(ログイン中のプロフィールや保存済みファイルには触れない)
 $('reset-btn').addEventListener('click', function() {
