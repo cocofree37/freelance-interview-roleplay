@@ -630,3 +630,28 @@ button.danger:hover { background: #fdf2f2; border-color: #d99; }
   html { scroll-behavior: auto; }
   * { transition: none !important; }
 }
+
+/* ---------- 面談用スライド ---------- */
+
+.slide-wrap { margin: 20px 0 24px; }
+.slide {
+  position: relative;
+  min-height: 170px;
+  padding: 26px 36px 34px;
+  border-radius: 12px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--navy);
+  box-shadow: 0 2px 10px rgba(7, 26, 41, 0.08);
+  overflow: hidden;
+}
+.slide-no { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: var(--ink-soft); }
+.slide h3 { margin: 0 0 14px; font-size: 20px; line-height: 1.5; color: var(--navy); }
+.slide ul { margin: 0; padding-left: 1.2em; }
+.slide li { font-size: 15px; line-height: 1.8; }
+.slide-notes { margin: 10px 4px 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+.slide-notes b { color: var(--ink); }
+@media (max-width: 640px) {
+  .slide { min-height: 0; padding: 20px 18px 30px; }
+  .slide h3 { font-size: 17px; }
+}

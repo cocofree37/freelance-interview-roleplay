@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>ApplyReady | 複業の応募・面談準備ツール</title>
-<meta name="description" content="複業の案件応募を、もっと簡単に。案件の内容を貼り付けるだけで、応募文・面談資料・ヒアリングテキストを作成します。" />
+<meta name="description" content="複業の案件応募を、もっと簡単に。案件の内容を貼り付けるだけで、応募文・面談資料・面談用スライドを作成します。" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" />
@@ -29,7 +29,7 @@
   <div class="hero-inner">
     <span class="hero-pill">複業の応募・面談準備ツール</span>
     <h1>Ready to <span class="grad">Apply.</span></h1>
-    <p class="hero-lead"><span class="phrase">案件の内容を貼り付けて、</span><span class="phrase">作りたいものを選ぶだけ。</span><br /><span class="phrase">応募文・面談資料・ヒアリングテキストを、</span><span class="phrase">あなたの経歴を踏まえて</span><span class="phrase">作成します。</span></p>
+    <p class="hero-lead"><span class="phrase">案件の内容を貼り付けて、</span><span class="phrase">作りたいものを選ぶだけ。</span><br /><span class="phrase">応募文・面談資料・面談用スライドを、</span><span class="phrase">あなたの経歴を踏まえて</span><span class="phrase">作成します。</span></p>
   </div>
 </header>
 
@@ -106,10 +106,10 @@
         <span class="mode-desc">想定質問と回答の骨子、突っ込まれそうな点をまとめます</span>
       </label>
       <label class="mode">
-        <input type="radio" name="output" value="hearing" />
+        <input type="radio" name="output" value="slides" />
         <span class="mode-check" aria-hidden="true"></span>
-        <span class="mode-title">ヒアリングテキスト</span>
-        <span class="mode-desc">案件の不明点を聞く質問と、自分が話すことを整理します</span>
+        <span class="mode-title">面談用スライド</span>
+        <span class="mode-desc">面談で画面共有できる5〜8枚の構成案を、話すことのメモ付きで作成します</span>
       </label>
     </div>
     <p class="hint" id="cost">選んだものを1回の作成で作ります。ほかも作りたいときは、選び直してもう一度作成してください。</p>
@@ -153,8 +153,8 @@ var session = null;
 var running = false;
 var state = { result: null, formItems: [], tab: null };
 
-var OUTPUT_ORDER = ['proposal', 'interview', 'hearing'];
-var OUTPUT_TITLES = { proposal: '応募文', interview: '面談資料', hearing: 'ヒアリングテキスト' };
+var OUTPUT_ORDER = ['proposal', 'interview', 'slides'];
+var OUTPUT_TITLES = { proposal: '応募文', interview: '面談資料', slides: '面談用スライド' };
 var VERDICT_NOTES = { '応募推奨': 'verdict-good', '条件次第': 'verdict-mid', '見送り推奨': 'verdict-bad' };
 var GUEST_TEXT_MAX = 20000;
 var MAX_FORM_ITEMS = 10;
@@ -338,25 +338,20 @@ function interviewPanel(r) {
   return box;
 }
 
-function hearingPanel(r) {
+function slidesPanel(r) {
   var box = el('div', {});
-  box.appendChild(el('p', { class: 'sub-title' }, ['案件について確認すること']));
-  (r.ask || []).forEach(function(g) {
-    var cat = el('div', { class: 'category' }, [el('h3', {}, [g.topic])]);
-    (g.questions || []).forEach(function(q) {
-      cat.appendChild(el('div', { class: 'qa' }, [el('p', { class: 'q' }, [q.question]), q.reason ? el('p', { class: 'why' }, ['確認する理由: ' + q.reason]) : null]));
-    });
-    box.appendChild(cat);
-  });
-  box.appendChild(el('p', { class: 'sub-title' }, ['面談で自分が話すこと']));
-  (r.talk || []).forEach(function(g, i) {
-    box.appendChild(el('div', { class: 'category' }, [
-      el('span', { class: 'index' }, [String(i + 1).padStart(2, '0')]),
-      el('h3', {}, [g.topic]),
-      list(g.points)
+  var pages = r.pages || [];
+  pages.forEach(function(g, i) {
+    box.appendChild(el('div', { class: 'slide-wrap' }, [
+      el('div', { class: 'slide' }, [
+        el('span', { class: 'slide-no' }, [String(i + 1) + ' / ' + pages.length]),
+        el('h3', {}, [g.title]),
+        list(g.bullets)
+      ]),
+      g.notes ? el('p', { class: 'slide-notes' }, [el('b', {}, ['話すこと: ']), g.notes]) : null
     ]));
   });
-  box.appendChild(copyButton('コピー', function() { return hearingText(r); }));
+  box.appendChild(copyButton('コピー', function() { return slidesText(r); }));
   return box;
 }
 
@@ -382,18 +377,15 @@ function interviewText(r) {
   return out.join('\n').trim();
 }
 
-function hearingText(r) {
-  var out = ['■ 案件について確認すること'];
-  (r.ask || []).forEach(function(g) {
-    out.push('【' + g.topic + '】');
-    (g.questions || []).forEach(function(q) { out.push('・' + q.question + (q.reason ? '(' + q.reason + ')' : '')); });
+function slidesText(r) {
+  var out = [];
+  (r.pages || []).forEach(function(g, i) {
+    out.push('■ スライド' + (i + 1) + ': ' + g.title);
+    (g.bullets || []).forEach(function(b) { out.push('・' + b); });
+    if (g.notes) out.push('【話すこと】' + g.notes);
+    out.push('');
   });
-  out.push('', '■ 面談で自分が話すこと');
-  (r.talk || []).forEach(function(g) {
-    out.push('【' + g.topic + '】');
-    (g.points || []).forEach(function(p) { out.push('・' + p); });
-  });
-  return out.join('\n');
+  return out.join('\n').trim();
 }
 
 function confirmationsSection(items, cost) {
@@ -432,7 +424,7 @@ function showResults() {
   var panels = {};
   keys.forEach(function(k) {
     var v = data.outputs[k];
-    panels[k] = k === 'proposal' ? proposalPanel(v) : k === 'interview' ? interviewPanel(v) : hearingPanel(v);
+    panels[k] = k === 'proposal' ? proposalPanel(v) : k === 'interview' ? interviewPanel(v) : slidesPanel(v);
   });
 
   var tabs = el('div', { class: 'tabs', role: 'tablist' });

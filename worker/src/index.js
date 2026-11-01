@@ -16,7 +16,7 @@ const MAX_FEEDBACK_CHARS = 600;
 const GUEST_PER_IP_LIMIT = 9;
 const GUEST_GLOBAL_LIMIT = 60;
 
-const OUTPUT_KEYS = ['proposal', 'interview', 'hearing'];
+const OUTPUT_KEYS = ['proposal', 'interview', 'slides'];
 
 const STRING_LIST = { type: 'array', items: { type: 'string' } };
 
@@ -110,46 +110,25 @@ const OUTPUT_SCHEMAS = {
     },
     required: ['categories', 'gaps', 'scripts']
   },
-  hearing: {
+  slides: {
     type: 'object',
-    description: 'ヒアリングテキスト。案件の不明点を聞く質問リストと、自分が話すことの整理。',
+    description: '面談用スライド。画面共有で使う5〜8枚の構成案。',
     properties: {
-      ask: {
+      pages: {
         type: 'array',
-        description: '案件内容から読み取れない点を、面談で確認するための質問。テーマごとにまとめる。',
+        description: 'スライドを1枚ずつ、使う順に並べる。',
         items: {
           type: 'object',
           properties: {
-            topic: { type: 'string', description: 'テーマ(例: 予算・契約、作業範囲、体制、納期、技術環境)' },
-            questions: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  question: { type: 'string', description: 'そのまま口に出して聞ける質問文' },
-                  reason: { type: 'string', description: 'なぜ確認が必要か(1文)' }
-                },
-                required: ['question', 'reason']
-              }
-            }
+            title: { type: 'string', description: 'スライドの見出し。結論が分かる短い一文。' },
+            bullets: Object.assign({ description: '画面に載せる箇条書き。1〜4項目、1項目は40字以内の体言止めや短い文。' }, STRING_LIST),
+            notes: { type: 'string', description: '話すこと(発表者メモ)。敬体で2〜3文。画面に載せない補足や数字の根拠を入れる。' }
           },
-          required: ['topic', 'questions']
-        }
-      },
-      talk: {
-        type: 'array',
-        description: '面談で自分が話すことの整理。話す順に並べる。',
-        items: {
-          type: 'object',
-          properties: {
-            topic: { type: 'string', description: 'テーマ(例: 自己紹介、案件に近い実績、進め方、稼働・条件)' },
-            points: Object.assign({ description: '話す要点(1項目1文程度)' }, STRING_LIST)
-          },
-          required: ['topic', 'points']
+          required: ['title', 'bullets', 'notes']
         }
       }
     },
-    required: ['ask', 'talk']
+    required: ['pages']
   }
 };
 
@@ -210,10 +189,14 @@ answers に、応募フォームの項目ごとの回答を作成する。
 - gaps: 応募者の情報がある場合のみ、案件の要件と応募者の情報を照らして「面談で突っ込まれそうな点」を最大5個挙げ、答え方のアドバイスを付ける。応募者の情報に無い経験を推測で補わない。応募者の情報が無い場合は空配列にする。
 - scripts: 答え方が重要な質問(最大4つ)について、回答の骨子を作る。「結論 → 進め方 → 根拠」の順。読み上げる台本ではなく、話す順番の骨子にする。根拠は応募者の情報にある事実だけを使い、無い場合は「[ここに実績を記入]」とする。`,
 
-  hearing: `## hearing(ヒアリングテキスト)
-面談で使うヒアリング用の資料を2つ作る。
-- ask(案件の不明点を聞く質問リスト): 案件内容から読み取れない点・曖昧な点を、面談で確認するための質問にする。テーマ(予算・契約、作業範囲と線引き、体制・意思決定、稼働の想定量と会議の頻度、納期、技術環境、成功の基準など)ごとにまとめ、各質問に「なぜ確認が必要か」を1文添える。案件内容に既に書かれていることは聞かない。募集文から推測した点は断定せず、「〜と理解しましたが、合っていますか」の形で聞く。そのまま口に出して聞ける、丁寧な口調にする。
-- talk(自分が話すことの整理): 面談で自分が話す内容を、話す順に整理する。直近の経歴から順に、どんなプロジェクトで、どんな役割で、どの工程をどう担当したかを述べる。結論から話し、質問にはプラスαの具体例を添える。例: 自己紹介(30秒)、案件に近い実績、進め方の提案、稼働・条件(応募者の希望条件が資料にあれば、数字で即答できる形で)、懸念点への答え。応募者の情報に書かれている事実だけを使い、無い場合は「[ここに実績を記入]」のようなプレースホルダーにする。`
+  slides: `## slides(面談用スライド)
+面談(主にオンライン)で画面共有しながら使う、5〜8枚のスライドの構成案を pages に作る。使う順に並べる。
+- 基本の流れ: ①表紙と自己紹介(氏名・肩書・案件への一言)/ ②案件の理解(課題とニーズを、募集文から読み取れた範囲で)/ ③関連する実績(数字を入れる)/ ④進め方と最初の動き(案件に合わせた具体的な段取り)/ ⑤稼働・条件(応募者の希望条件が資料にあれば、数字で即答できる形で。案件との食い違いは隠さず、相談の形で)/ ⑥確認させてください(募集文から読み取れない点・曖昧な点を、「〜と理解しましたが、合っていますか」の形で3〜5個)/ ⑦次のステップ。案件に合わせて枚数や順序は調整してよい。
+- title: スライドの見出し。何が言いたいスライドか分かる、短い一文にする。
+- bullets: 画面に載せる箇条書き。1〜4項目、1項目は40字以内。読み上げではなく、目で追える短さにする。
+- notes: そのスライドで話すこと。敬体で2〜3文。画面に載せない補足や、数字の根拠を入れる。
+- 応募者の実績・数字・社名は、<applicant_profile> に書かれた事実だけを使う。無い場合は「[ここに実績を記入]」のようなプレースホルダーにする。応募者の情報が無いときは、②④⑥を中心に作り、③は枠だけにする。
+- 案件内容に既に書かれていることを、⑥で聞き直さない。`
 };
 
 class HttpError extends Error {
@@ -446,13 +429,8 @@ function isValidResult(input, outputs) {
         && isList(v.gaps) && v.gaps.every(function(g) { return g && isText(g.point) && isText(g.advice); })
         && isList(v.scripts) && v.scripts.every(function(sc) { return sc && isText(sc.question) && isTextList(sc.outline); });
     }
-    return isList(v.ask) && v.ask.length > 0
-      && v.ask.every(function(g) {
-        return g && isText(g.topic) && isList(g.questions) && g.questions.length > 0
-          && g.questions.every(function(q) { return q && isText(q.question); });
-      })
-      && isList(v.talk) && v.talk.length > 0
-      && v.talk.every(function(g) { return g && isText(g.topic) && isTextList(g.points); });
+    return isList(v.pages) && v.pages.length > 0
+      && v.pages.every(function(g) { return g && isText(g.title) && isTextList(g.bullets) && g.bullets.length > 0; });
   });
 }
 
