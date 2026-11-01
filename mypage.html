@@ -12,12 +12,12 @@
   <a class="back-link" href="./">← 案件の準備に戻る</a>
   <p class="eyebrow">My Page</p>
   <h1>マイページ</h1>
-  <p class="lead">提案文の作成や、面談の想定質問に使う経歴・実績を登録します。案件ごとに貼り付ける必要はありません。</p>
+  <p class="lead">プロフィールと職務経歴書を保存しておくと、案件ごとに入力しなくても、応募文・面談資料・ヒアリングテキストに反映されます。</p>
 
-  <div id="unavailable" class="msg hidden">この機能はまだ有効になっていません。</div>
+  <div id="unavailable" class="msg hidden">この機能は現在ご利用いただけません。</div>
 
   <div id="auth-out" class="hidden">
-    <label class="field-label">ログイン</label>
+    <label class="field-label">ログイン(メールに届くリンクを開くだけです)</label>
     <div class="row" style="margin-top:0">
       <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
       <button id="auth-send" class="ghost">ログインリンクを送る</button>
@@ -35,10 +35,26 @@
     </div>
 
     <div class="mypage-section">
-      <h2>経歴・実績</h2>
-      <textarea id="profile" rows="16" placeholder="職務経歴書の内容、実績(数値があれば具体的に)、得意分野、対応可能な業務、稼働条件などを貼り付けてください"></textarea>
-      <p id="counter" class="counter">0 / 8,000文字</p>
-      <p class="hint">提案文の作成では、ここに書かれている事実だけを使います。数値や成果は具体的に書くほど、提案文が具体的になります。想定質問では、案件との差から「突っ込まれそうな点」も出します。</p>
+      <h2>プロフィール</h2>
+      <div class="field">
+        <label class="field-label" for="full-name">氏名(応募文の署名に使います)</label>
+        <input type="text" id="full-name" maxlength="100" autocomplete="name" />
+      </div>
+      <div class="field">
+        <label class="field-label" for="headline">職種・肩書</label>
+        <input type="text" id="headline" maxlength="200" placeholder="例: ECサイト構築・運用の個人事業主" />
+      </div>
+      <div class="field">
+        <label class="field-label" for="profile">経歴・実績・強み</label>
+        <textarea id="profile" rows="12" placeholder="これまでの経歴、実績(数値があれば具体的に)、得意分野、対応できる業務などを書いてください"></textarea>
+        <p id="counter" class="counter">0 / 8,000文字</p>
+      </div>
+      <div class="field">
+        <label class="field-label" for="conditions">稼働・単価などの希望条件</label>
+        <textarea id="conditions" rows="4" placeholder="例: 平日2〜4時間、リモート可、月額◯円〜"></textarea>
+        <p id="counter2" class="counter">0 / 2,000文字</p>
+      </div>
+      <p class="hint">応募文では、ここに書かれている事実だけを使います。書かれていないことは作り足しません。</p>
       <div class="row">
         <button id="profile-save" class="ghost">保存する</button>
         <span id="saved-at" class="msg" style="margin:0"></span>
@@ -47,24 +63,42 @@
     </div>
 
     <div class="mypage-section">
-      <h2>データの管理</h2>
-      <p class="hint" style="margin-top:0">経歴はあなただけが読み書きできる形で保存されます。案件の作成を実行したときのみ、生成のためAI(Anthropic Claude)に送信されます。</p>
+      <h2>職務経歴書などのファイル</h2>
+      <p class="hint" style="margin-top:0">PDF・Word(.docx)・テキスト(.txt/.md)、1ファイル5MBまで、5件まで。原本は本人だけが見られる領域に保存し、AIには取り出した文字だけを使います。画像だけのPDFは文字を取り出せません。</p>
+      <div id="files"></div>
       <div class="row">
-        <button id="profile-delete" class="ghost danger">保存した経歴を削除</button>
+        <label class="upload-label">
+          ファイルを追加
+          <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md" />
+        </label>
       </div>
+      <p id="file-msg" class="msg"></p>
+    </div>
+
+    <div class="mypage-section">
+      <h2>データの管理</h2>
+      <p class="hint" style="margin-top:0">保存したデータは、案件の作成を実行したときのみ、文章の生成のためAI(Anthropic Claude)に送信されます。</p>
+      <div class="row">
+        <button id="delete-all" class="ghost danger">プロフィールとファイルをすべて削除</button>
+      </div>
+      <p id="delete-msg" class="msg"></p>
       <p class="hint">アカウント自体の削除をご希望の場合は、運営者までご連絡ください。</p>
     </div>
   </div>
 </div>
 
 <script src="config.js"></script>
+<script src="extract.js"></script>
 <script>
-var MAX_CHARS = 8000;
+var LIMITS = { content: 8000, conditions: 2000 };
+var MAX_FILES = 5;
+var BUCKET = 'documents';
+
 var configured = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && CONFIG.WORKER_URL && window.supabase);
 var sb = configured ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
 var session = null;
-var savedProfile = '';
-var loaded = false;
+var saved = null;
+var docs = [];
 
 function $(id) { return document.getElementById(id); }
 
@@ -73,13 +107,43 @@ function setMsg(node, text, isError) {
   node.classList.toggle('error', !!isError);
 }
 
-function isDirty() { return loaded && $('profile').value.trim() !== savedProfile; }
+function el(tag, props, children) {
+  var node = document.createElement(tag);
+  if (props) {
+    Object.keys(props).forEach(function(k) {
+      if (k === 'class') node.className = props[k];
+      else node.setAttribute(k, props[k]);
+    });
+  }
+  (children || []).forEach(function(c) {
+    if (typeof c === 'string') node.appendChild(document.createTextNode(c));
+    else if (c) node.appendChild(c);
+  });
+  return node;
+}
 
-function updateCounter() {
-  var len = $('profile').value.length;
-  var node = $('counter');
-  node.textContent = len.toLocaleString() + ' / ' + MAX_CHARS.toLocaleString() + '文字';
-  node.classList.toggle('over', len > MAX_CHARS);
+function formValues() {
+  return {
+    full_name: $('full-name').value.trim(),
+    headline: $('headline').value.trim(),
+    content: $('profile').value.trim(),
+    conditions: $('conditions').value.trim()
+  };
+}
+
+function isDirty() {
+  if (!saved) return false;
+  var v = formValues();
+  return Object.keys(v).some(function(k) { return v[k] !== saved[k]; });
+}
+
+function updateCounters() {
+  [['profile', 'counter', 'content'], ['conditions', 'counter2', 'conditions']].forEach(function(c) {
+    var len = $(c[0]).value.length;
+    var node = $(c[1]);
+    node.textContent = len.toLocaleString() + ' / ' + LIMITS[c[2]].toLocaleString() + '文字';
+    node.classList.toggle('over', len > LIMITS[c[2]]);
+  });
 }
 
 function render() {
@@ -89,50 +153,145 @@ function render() {
   if (session) $('account-email').textContent = session.user.email;
 }
 
+/* ---------- プロフィール ---------- */
+
 async function loadProfile() {
-  loaded = false;
-  var res = await sb.from('profiles').select('content, updated_at').eq('user_id', session.user.id).maybeSingle();
-  if (res.error) { setMsg($('profile-msg'), '経歴の読み込みに失敗しました。時間をおいて再度お試しください', true); return; }
-  savedProfile = res.data ? res.data.content : '';
-  $('profile').value = savedProfile;
-  updateCounter();
+  saved = null;
+  var res = await sb.from('profiles').select('full_name, headline, content, conditions, updated_at').eq('user_id', session.user.id).maybeSingle();
+  if (res.error) { setMsg($('profile-msg'), 'プロフィールの読み込みに失敗しました。時間をおいて再度お試しください', true); return false; }
+  var row = res.data || {};
+  $('full-name').value = row.full_name || '';
+  $('headline').value = row.headline || '';
+  $('profile').value = row.content || '';
+  $('conditions').value = row.conditions || '';
+  updateCounters();
+  saved = formValues();
   setMsg($('saved-at'), res.data ? '最終保存: ' + new Date(res.data.updated_at).toLocaleString('ja-JP') : '未保存', false);
-  loaded = true;
+  return true;
 }
 
-$('profile').addEventListener('input', function() {
-  updateCounter();
-  setMsg($('profile-msg'), '', false);
-});
+$('profile').addEventListener('input', function() { updateCounters(); setMsg($('profile-msg'), '', false); });
+$('conditions').addEventListener('input', function() { updateCounters(); setMsg($('profile-msg'), '', false); });
 
 $('profile-save').addEventListener('click', async function() {
-  var content = $('profile').value.trim();
-  if (content.length > MAX_CHARS) {
-    setMsg($('profile-msg'), MAX_CHARS.toLocaleString() + '文字以内にしてください(現在 ' + content.length.toLocaleString() + '文字)', true);
-    return;
-  }
-  if (!loaded) { setMsg($('profile-msg'), '経歴を読み込めていないため保存できません。ページを再読み込みしてください', true); return; }
+  var v = formValues();
+  if (v.content.length > LIMITS.content) { setMsg($('profile-msg'), '経歴・実績・強みは' + LIMITS.content.toLocaleString() + '文字以内にしてください', true); return; }
+  if (v.conditions.length > LIMITS.conditions) { setMsg($('profile-msg'), '希望条件は' + LIMITS.conditions.toLocaleString() + '文字以内にしてください', true); return; }
+  if (!saved) { setMsg($('profile-msg'), 'プロフィールを読み込めていないため保存できません。ページを再読み込みしてください', true); return; }
   var btn = $('profile-save');
   btn.disabled = true;
   var now = new Date();
-  var res = await sb.from('profiles').upsert({ user_id: session.user.id, content: content, updated_at: now.toISOString() });
+  var res = await sb.from('profiles').upsert(Object.assign({ user_id: session.user.id, updated_at: now.toISOString() }, v));
   btn.disabled = false;
   if (res.error) { setMsg($('profile-msg'), '保存に失敗しました。時間をおいて再度お試しください', true); return; }
-  savedProfile = content;
+  saved = v;
   setMsg($('profile-msg'), '保存しました', false);
   setMsg($('saved-at'), '最終保存: ' + now.toLocaleString('ja-JP'), false);
 });
 
-$('profile-delete').addEventListener('click', async function() {
-  if (!confirm('保存した経歴を削除しますか?この操作は取り消せません。')) return;
-  var res = await sb.from('profiles').delete().eq('user_id', session.user.id);
-  if (res.error) { setMsg($('profile-msg'), '削除に失敗しました', true); return; }
-  savedProfile = '';
-  $('profile').value = '';
-  updateCounter();
-  setMsg($('saved-at'), '未保存', false);
-  setMsg($('profile-msg'), '削除しました', false);
+/* ---------- ファイル ---------- */
+
+function renderFiles() {
+  var box = $('files');
+  box.innerHTML = '';
+  if (!docs.length) { box.appendChild(el('p', { class: 'hint', style: 'margin-top:0' }, ['保存されたファイルはありません。'])); return; }
+  docs.forEach(function(d) {
+    var dl = el('button', { class: 'ghost', type: 'button' }, ['ダウンロード']);
+    var rm = el('button', { class: 'ghost danger', type: 'button' }, ['削除']);
+    dl.addEventListener('click', function() { downloadDoc(d); });
+    rm.addEventListener('click', function() { removeDoc(d); });
+    box.appendChild(el('div', { class: 'file-row' }, [
+      el('div', {}, [
+        el('div', { class: 'file-name' }, [d.filename]),
+        el('div', { class: 'file-meta' }, [Math.max(1, Math.round(d.size_bytes / 1024)).toLocaleString() + 'KB・AIが使う文字 ' + d.chars.toLocaleString() + '文字・' + new Date(d.created_at).toLocaleDateString('ja-JP')])
+      ]),
+      el('div', { class: 'row', style: 'margin:0' }, [dl, rm])
+    ]));
+  });
+}
+
+async function loadDocs() {
+  var res = await sb.from('documents').select('id, filename, storage_path, size_bytes, content_text, created_at').order('created_at', { ascending: true });
+  if (res.error) { setMsg($('file-msg'), 'ファイル一覧の読み込みに失敗しました', true); return; }
+  docs = (res.data || []).map(function(d) {
+    return { id: d.id, filename: d.filename, storage_path: d.storage_path, size_bytes: d.size_bytes, created_at: d.created_at, chars: (d.content_text || '').length };
+  });
+  renderFiles();
+}
+
+$('file-input').addEventListener('change', async function(e) {
+  var file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  var msg = $('file-msg');
+  if (docs.length >= MAX_FILES) { setMsg(msg, 'ファイルは' + MAX_FILES + '件までです。不要なファイルを削除してください', true); return; }
+  var inputEl = $('file-input');
+  inputEl.disabled = true;
+  var path = null;
+  try {
+    setMsg(msg, '「' + file.name + '」から文字を取り出しています…', false);
+    var r = await DocExtract.extract(file);
+
+    setMsg(msg, '保存しています…', false);
+    path = session.user.id + '/' + crypto.randomUUID() + '.' + r.ext;
+    var up = await sb.storage.from(BUCKET).upload(path, file, { contentType: r.mime, upsert: false });
+    if (up.error) throw new Error('ファイルの保存に失敗しました。時間をおいて再度お試しください');
+
+    var ins = await sb.from('documents').insert({
+      user_id: session.user.id, filename: file.name, storage_path: path, size_bytes: file.size, content_text: r.text
+    });
+    if (ins.error) {
+      await sb.storage.from(BUCKET).remove([path]);
+      throw new Error('ファイル情報の保存に失敗しました。時間をおいて再度お試しください');
+    }
+    path = null;
+    await loadDocs();
+    setMsg(msg, '「' + file.name + '」を保存しました' + (r.truncated ? '(長いため、AIが使うのは先頭の' + DocExtract.MAX_CHARS.toLocaleString() + '文字までです)' : ''), false);
+  } catch (err) {
+    setMsg(msg, err.message, true);
+  } finally {
+    inputEl.disabled = false;
+  }
 });
+
+async function downloadDoc(d) {
+  var res = await sb.storage.from(BUCKET).createSignedUrl(d.storage_path, 60, { download: d.filename });
+  if (res.error) { setMsg($('file-msg'), 'ダウンロードに失敗しました', true); return; }
+  var a = document.createElement('a');
+  a.href = res.data.signedUrl;
+  a.download = d.filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function removeDoc(d) {
+  if (!confirm('「' + d.filename + '」を削除しますか?この操作は取り消せません。')) return;
+  var st = await sb.storage.from(BUCKET).remove([d.storage_path]);
+  if (st.error) { setMsg($('file-msg'), '削除に失敗しました', true); return; }
+  var res = await sb.from('documents').delete().eq('id', d.id);
+  if (res.error) { setMsg($('file-msg'), '削除に失敗しました', true); return; }
+  await loadDocs();
+  setMsg($('file-msg'), '削除しました', false);
+}
+
+$('delete-all').addEventListener('click', async function() {
+  if (!confirm('保存したプロフィールとファイルをすべて削除しますか?この操作は取り消せません。')) return;
+  var msg = $('delete-msg');
+  if (docs.length) {
+    var st = await sb.storage.from(BUCKET).remove(docs.map(function(d) { return d.storage_path; }));
+    if (st.error) { setMsg(msg, '削除に失敗しました', true); return; }
+    var dr = await sb.from('documents').delete().eq('user_id', session.user.id);
+    if (dr.error) { setMsg(msg, '削除に失敗しました', true); return; }
+  }
+  var pr = await sb.from('profiles').delete().eq('user_id', session.user.id);
+  if (pr.error) { setMsg(msg, '削除に失敗しました', true); return; }
+  await loadProfile();
+  await loadDocs();
+  setMsg(msg, 'すべて削除しました', false);
+});
+
+/* ---------- ログイン ---------- */
 
 $('auth-send').addEventListener('click', async function() {
   var email = $('auth-email').value.trim();
@@ -154,6 +313,11 @@ window.addEventListener('beforeunload', function(e) {
   if (isDirty()) { e.preventDefault(); e.returnValue = ''; }
 });
 
+async function loadAll() {
+  await loadProfile();
+  await loadDocs();
+}
+
 (async function init() {
   if (configured) {
     var res = await sb.auth.getSession();
@@ -164,12 +328,12 @@ window.addEventListener('beforeunload', function(e) {
       setTimeout(function() {
         render();
         if (changed) {
-          if (s) loadProfile();
-          else { savedProfile = ''; loaded = false; $('profile').value = ''; }
+          if (s) loadAll();
+          else { saved = null; docs = []; ['full-name', 'headline', 'profile', 'conditions'].forEach(function(id) { $(id).value = ''; }); renderFiles(); }
         }
       }, 0);
     });
-    if (session) await loadProfile();
+    if (session) await loadAll();
   }
   render();
 })();

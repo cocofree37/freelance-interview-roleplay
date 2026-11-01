@@ -11,63 +11,79 @@
 <div class="wrap">
   <p class="eyebrow">Interview Preparation</p>
   <h1>案件面談<br />準備アシスト</h1>
-  <p class="lead">案件のURLまたはテキストを入力し、「応募提案文の作成」か「面談で想定される質問」を選ぶだけ。あなたの経歴・実績を踏まえて作成します。</p>
+  <p class="lead">案件のURLを入れて、作りたいものを選ぶだけ。応募文、面談資料、ヒアリングテキストを、あなたの経歴を踏まえて作成します。</p>
 
-  <div id="auth-panel" class="block hidden" style="margin-top:0">
-    <div id="auth-out">
-      <label class="field-label">ログイン(経歴の保存と、AIによる作成に必要です)</label>
-      <div class="row" style="margin-top:0">
-        <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
-        <button id="auth-send" class="ghost">ログインリンクを送る</button>
-      </div>
-      <p id="auth-msg" class="msg"></p>
+  <div class="mode-bar" id="mode-bar">
+    <div id="bar-guest" class="hidden" style="display:contents">
+      <span class="mode-badge">ゲストモード</span>
+      <span class="mode-note">入力した内容は保存されません。ログインすると、プロフィールと職務経歴書を保存できます。</span>
+      <button id="open-login" class="ghost">ログイン</button>
     </div>
-    <div id="auth-in" class="hidden">
-      <div class="row" style="margin-top:0">
-        <span id="auth-user" class="msg" style="margin:0"></span>
-        <a class="ghost-link" href="mypage.html">マイページ</a>
-        <button id="auth-logout" class="ghost">ログアウト</button>
-      </div>
+    <div id="bar-account" class="hidden" style="display:contents">
+      <span class="mode-badge">ログイン中</span>
+      <span class="mode-note" id="user-label"></span>
+      <a class="ghost-link" href="mypage.html">マイページ</a>
+      <button id="auth-logout" class="ghost">ログアウト</button>
     </div>
   </div>
 
-  <div id="mode-note" class="source-note hidden"></div>
+  <div id="login-panel" class="block hidden" style="margin-top:-1.5rem;margin-bottom:3rem">
+    <label class="field-label">ログイン(メールに届くリンクを開くだけです)</label>
+    <div class="row" style="margin-top:0">
+      <input type="email" id="auth-email" placeholder="メールアドレス" autocomplete="email" />
+      <button id="auth-send" class="ghost">ログインリンクを送る</button>
+    </div>
+    <p id="auth-msg" class="msg"></p>
+  </div>
 
-  <div id="profile-summary" class="block hidden">
+  <div class="block" style="margin-top:0">
+    <label class="field-label" for="job">案件のURL</label>
+    <textarea id="job" rows="3" placeholder="案件ページのURLを貼り付け"></textarea>
+    <p class="hint">ページの本文を自動で取得します。ログインが必要なページなどで取得できない場合は、案件の本文をここに貼り付けてください。</p>
+  </div>
+
+  <div class="block" id="guest-profile">
+    <label class="field-label" for="guest-text">あなたのプロフィール・経歴(ゲストは保存されません)</label>
+    <textarea id="guest-text" rows="6" placeholder="経歴・実績(数値があれば具体的に)・得意分野・稼働条件などを貼り付け。応募文の作成には必要です。"></textarea>
+    <div class="row">
+      <label class="upload-label">
+        職務経歴書などを読み込む(PDF・Word・テキスト)
+        <input type="file" id="guest-file" accept=".pdf,.docx,.txt,.md" multiple />
+      </label>
+    </div>
+    <p id="guest-file-msg" class="hint"></p>
+  </div>
+
+  <div class="block hidden" id="account-profile">
     <div class="summary-box">
       <div>
-        <span class="field-label" style="margin:0 0 0.4rem">あなたの経歴・実績</span>
+        <span class="field-label" style="margin:0 0 0.4rem">あなたのプロフィール・職務経歴書</span>
         <span id="profile-status" class="summary-text"></span>
       </div>
-      <a class="ghost-link" id="profile-edit-link" href="mypage.html">マイページで編集</a>
+      <a class="ghost-link" id="profile-link" href="mypage.html">マイページで編集</a>
     </div>
   </div>
 
-  <div id="profile-local" class="block hidden">
-    <label class="field-label">あなたの経歴・実績(簡易版では保存されません)</label>
-    <textarea id="profile" rows="6" placeholder="実績・得意分野などを貼り付けてください(提案文に使います)"></textarea>
-  </div>
-
   <div class="block">
-    <label class="field-label">案件のURL または テキスト</label>
-    <textarea id="job-content" rows="7" placeholder="案件のURLを貼り付け、または募集要項をコピペ"></textarea>
-    <p id="url-hint" class="hint">URLの場合は本文を自動で取得します。ログインが必要なページなどで取得できない場合は、本文を貼り付けてください。</p>
-  </div>
-
-  <div class="block">
-    <label class="field-label">作成するもの</label>
-    <div class="modes">
+    <label class="field-label">作成するもの(選んだ数だけ利用回数を消費します)</label>
+    <div class="modes" id="choices">
       <label class="mode selected">
-        <input type="radio" name="mode" value="proposal" checked />
-        <span class="mode-title">応募提案文の作成</span>
-        <span class="mode-desc">案件と経歴から、そのまま送れる提案文の下書きを作成します</span>
+        <input type="checkbox" name="output" value="proposal" checked />
+        <span class="mode-title">応募文</span>
+        <span class="mode-desc">案件と経歴から、そのまま送れる応募文を作成します</span>
       </label>
-      <label class="mode">
-        <input type="radio" name="mode" value="questions" />
-        <span class="mode-title">面談で想定される質問</span>
-        <span class="mode-desc">聞かれそうな質問と、突っ込まれそうな点・準備事項をまとめます</span>
+      <label class="mode selected">
+        <input type="checkbox" name="output" value="interview" checked />
+        <span class="mode-title">面談資料</span>
+        <span class="mode-desc">想定質問と準備事項、突っ込まれそうな点をまとめます</span>
+      </label>
+      <label class="mode selected">
+        <input type="checkbox" name="output" value="hearing" checked />
+        <span class="mode-title">ヒアリングテキスト</span>
+        <span class="mode-desc">案件の不明点を聞く質問と、自分が話すことを整理します</span>
       </label>
     </div>
+    <p id="cost" class="hint"></p>
   </div>
 
   <div id="form-error" class="msg error hidden"></div>
@@ -77,17 +93,22 @@
   <div id="output"></div>
 
   <footer class="note">
-    <p>入力した案件内容・経歴は、文章の生成のためAI(Anthropic Claude)に送信されます。経歴は本人のみが閲覧できる形で保存され、いつでも削除できます。</p>
+    <p>入力した案件・プロフィール・経歴は、文章の生成のためAI(Anthropic Claude)に送信されます。ゲストの内容は保存されません。ログインした場合のみ、プロフィールと職務経歴書が本人だけが見られる形で保存され、マイページからいつでも削除できます。</p>
     <p>生成される文章はあくまで下書きです。内容の正確性をご自身で確認のうえ、ご利用ください。</p>
   </footer>
 </div>
 
 <script src="config.js"></script>
+<script src="extract.js"></script>
 <script>
 var configured = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && CONFIG.WORKER_URL && window.supabase);
 var sb = configured ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
 var session = null;
-var savedProfile = '';
+var running = false;
+
+var OUTPUT_ORDER = ['proposal', 'interview', 'hearing'];
+var OUTPUT_TITLES = { proposal: '応募文', interview: '面談資料', hearing: 'ヒアリングテキスト' };
+var GUEST_TEXT_MAX = 20000;
 
 function $(id) { return document.getElementById(id); }
 
@@ -111,219 +132,198 @@ function setMsg(node, text, isError) {
   node.classList.toggle('error', !!isError);
 }
 
-function currentMode() { return document.querySelector('input[name="mode"]:checked').value; }
-
-/* ---------- ローカル簡易版(未設定時のフォールバック) ---------- */
-
-function excerpt(text) {
-  var s = text.replace(/\s+/g, ' ').trim();
-  return s.length > 40 ? s.slice(0, 40) + '…' : s;
+function showError(text) {
+  setMsg($('form-error'), text, true);
+  $('form-error').classList.remove('hidden');
 }
 
-function buildHeuristicCategories(jobContent) {
-  return [
-    { title: 'アイスブレイク・自己紹介',
-      questions: ['簡単に自己紹介をお願いします', 'これまでの経歴を教えてください', '今回応募した理由を教えてください'],
-      tips: ['30秒程度で話せる自己紹介(経歴・得意分野・実績)を用意しておく'] },
-    { title: '案件要件のすり合わせ',
-      questions: ['今回の「' + excerpt(jobContent) + '」という案件ですが、対応可能そうですか?', '案件の背景や目的について理解されていますか?', '類似案件の経験はありますか?'],
-      tips: ['募集要項を読み込み、対応可否をすぐ答えられるようにしておく', '不明点があれば事前に質問リストを用意しておく'] },
-    { title: '実績・スキルの深掘り',
-      questions: ['その実績で具体的にどんな役割を担いましたか?', '成果を数字で教えてください', '一番苦労した点と、どう乗り越えたかを教えてください'],
-      tips: ['直近の実績を2〜3件、役割と成果をセットで話せるように整理しておく'] },
-    { title: '稼働条件',
-      questions: ['稼働できる曜日・時間帯を教えてください', '繁忙期や急な依頼にはどこまで対応できますか?', '連絡ツールやレスポンス速度への希望はありますか?'],
-      tips: ['稼働可能な曜日・時間・上限時間数を数字で言えるようにしておく', '繁忙期対応の可否ラインを決めておく'] },
-    { title: '単価・契約条件',
-      questions: ['希望単価を教えてください', 'その金額の根拠(相場観)を教えてください', '業務範囲外の依頼が発生した場合はどう対応しますか?'],
-      tips: ['希望単価と譲歩できる下限ラインを事前に決めておく', '類似案件の相場を調べておく'] },
-    { title: 'リスク耐性・トラブル対応',
-      questions: ['途中で仕様変更が入ったらどう対応しますか?', '他の案件と重なった場合はどうしますか?', '納期に間に合わなそうな場合、どう連絡しますか?'],
-      tips: ['トラブル時の報告・連絡・相談の方針を一言で言えるようにしておく'] },
-    { title: 'クロージング・逆質問',
-      questions: ['何か質問はありますか?'],
-      tips: ['逆質問を2〜3個用意しておく(業務の進め方、チーム体制、評価基準など)'] }
-  ];
-}
-
-var KEYWORD_QUESTIONS = [
-  { pattern: /リモート|在宅/, index: 3, question: '完全リモートでの稼働ですが、コミュニケーション面で工夫していることはありますか?' },
-  { pattern: /常駐|出社/, index: 3, question: '出社頻度や勤務地について、対応可能な範囲を教えてください' },
-  { pattern: /週\d|曜日/, index: 3, question: '募集要項にある稼働日数・曜日に対応できますか?' },
-  { pattern: /単価|報酬|時給|月額|円/, index: 4, question: '募集要項に記載の金額感について、希望とのすり合わせをさせてください' },
-  { pattern: /急募|即日|すぐ/, index: 3, question: '開始時期はいつから対応可能ですか?' },
-  { pattern: /長期|継続/, index: 1, question: '長期的な参画を想定していますが、継続的に稼働できそうですか?' },
-  { pattern: /HTML|CSS|コーディング|Shopify|WordPress|Wordpress|LP制作|サイト制作/, index: 2, question: 'コーディングやサイト制作の実績を、使用言語・CMSと合わせて教えてください' },
-  { pattern: /デザイン|Figma|UI|UX|バナー/, index: 2, question: '過去に手がけたデザインの実績を見せていただくことは可能ですか?' },
-  { pattern: /マーケティング|広告運用|SNS運用|集客/, index: 2, question: '施策の効果を数値(CVR・CPAなど)で教えてください' },
-  { pattern: /経理|記帳|請求書|会計/, index: 2, question: '利用したことのある会計ソフトや経理業務の範囲を教えてください' },
-  { pattern: /ライティング|記事作成|SEO|執筆/, index: 2, question: 'SEOを意識した記事作成の実績や得意ジャンルを教えてください' },
-  { pattern: /動画編集|Premiere|After Effects|撮影/, index: 2, question: '使用している編集ソフトと、得意な動画のジャンルを教えてください' },
-  { pattern: /エンジニア|開発|プログラミング|React|Python|Java/, index: 2, question: '使用言語・フレームワークと、開発経験年数を教えてください' },
-  { pattern: /事務|アシスタント|秘書/, index: 2, question: 'これまで担当した事務業務の範囲(対応ツール含む)を教えてください' }
-];
-
-function generateHeuristicQuestions(jobContent) {
-  var categories = buildHeuristicCategories(jobContent);
-  KEYWORD_QUESTIONS.forEach(function(kq) {
-    if (kq.pattern.test(jobContent) && categories[kq.index].questions.indexOf(kq.question) === -1) {
-      categories[kq.index].questions.push(kq.question);
-    }
+function selectedOutputs() {
+  return OUTPUT_ORDER.filter(function(k) {
+    return document.querySelector('input[name="output"][value="' + k + '"]').checked;
   });
-  return { categories: categories, gaps: [] };
 }
 
-function generateHeuristicProposal(jobContent, profile) {
-  var achievements = (profile || '').trim() || '[ここにご自身の実績・スキルを記入してください]';
-  return [
-    '拝啓', '',
-    'この度は貴社の募集をご覧になり、ご連絡いたしました。', '',
-    '募集内容を拝見し、「' + excerpt(jobContent) + '」という点にお困りかと存じます。', '',
-    '私にはこれまで、以下のような実績・経験がございます。',
-    achievements, '',
-    'つきましては、以下のような進め方で貴社の課題解決に貢献できればと考えております。',
-    '1. まずは現状のヒアリングと要件の整理を行います',
-    '2. 整理した要件をもとに、具体的な進め方・スケジュールをご提案します',
-    '3. 実施しながら適宜認識合わせを行い、認識のズレを防ぎます', '',
-    'これにより、業務の効率化や成果の向上に貢献できるものと考えております。', '',
-    'ご不明点やご要望がございましたら、お気軽にお申し付けください。ご検討のほど、何卒よろしくお願いいたします。', '',
-    '敬具'
-  ].join('\n');
+function updateCost() {
+  var n = selectedOutputs().length;
+  $('cost').textContent = n ? n + '回分の利用回数を消費します。' : '作成するものを1つ以上選んでください。';
+  document.querySelectorAll('#choices .mode').forEach(function(m) {
+    m.classList.toggle('selected', m.querySelector('input').checked);
+  });
 }
 
-/* ---------- 表示 ---------- */
+/* ---------- 結果の表示 ---------- */
 
-function showOutput(children) {
+function copyButton(getText) {
+  var btn = el('button', { class: 'ghost', style: 'margin-top:2rem' }, ['コピー']);
+  btn.addEventListener('click', function() {
+    navigator.clipboard.writeText(getText()).then(function() {
+      btn.textContent = 'コピーしました';
+      setTimeout(function() { btn.textContent = 'コピー'; }, 2000);
+    });
+  });
+  return btn;
+}
+
+function list(items, cls) {
+  return el('ul', cls ? { class: cls } : {}, (items || []).map(function(t) { return el('li', {}, [t]); }));
+}
+
+function interviewPanel(r) {
+  var box = el('div', {});
+  if (r.gaps && r.gaps.length) {
+    var gapBox = el('div', { class: 'category', style: 'padding-top:0;border-top:none' }, [el('h3', {}, ['経歴から突っ込まれそうな点'])]);
+    r.gaps.forEach(function(g) {
+      gapBox.appendChild(el('div', { class: 'gap' }, [el('p', {}, [g.point]), el('p', { class: 'advice' }, [g.advice])]));
+    });
+    box.appendChild(gapBox);
+  }
+  (r.categories || []).forEach(function(c, i) {
+    box.appendChild(el('div', { class: 'category' }, [
+      el('span', { class: 'index' }, [String(i + 1).padStart(2, '0')]),
+      el('h3', {}, [c.title]),
+      el('h4', {}, ['想定される質問']),
+      list(c.questions),
+      el('h4', {}, ['準備しておくとよいこと']),
+      list(c.tips, 'tips')
+    ]));
+  });
+  box.appendChild(copyButton(function() { return interviewText(r); }));
+  return box;
+}
+
+function hearingPanel(r) {
+  var box = el('div', {});
+  box.appendChild(el('p', { class: 'sub-title' }, ['案件について確認すること']));
+  (r.ask || []).forEach(function(g) {
+    var cat = el('div', { class: 'category' }, [el('h3', {}, [g.topic])]);
+    (g.questions || []).forEach(function(q) {
+      cat.appendChild(el('div', { class: 'qa' }, [el('p', { class: 'q' }, [q.question]), q.reason ? el('p', { class: 'why' }, ['確認する理由: ' + q.reason]) : null]));
+    });
+    box.appendChild(cat);
+  });
+  box.appendChild(el('p', { class: 'sub-title' }, ['面談で自分が話すこと']));
+  (r.talk || []).forEach(function(g, i) {
+    box.appendChild(el('div', { class: 'category' }, [
+      el('span', { class: 'index' }, [String(i + 1).padStart(2, '0')]),
+      el('h3', {}, [g.topic]),
+      list(g.points)
+    ]));
+  });
+  box.appendChild(copyButton(function() { return hearingText(r); }));
+  return box;
+}
+
+function proposalPanel(text) {
+  return el('div', {}, [el('div', { class: 'proposal-text' }, [text]), copyButton(function() { return text; })]);
+}
+
+function interviewText(r) {
+  var out = [];
+  if (r.gaps && r.gaps.length) {
+    out.push('■ 経歴から突っ込まれそうな点');
+    r.gaps.forEach(function(g) { out.push('・' + g.point, '  → ' + g.advice); });
+    out.push('');
+  }
+  (r.categories || []).forEach(function(c) {
+    out.push('■ ' + c.title, '【想定される質問】');
+    (c.questions || []).forEach(function(q) { out.push('・' + q); });
+    out.push('【準備しておくとよいこと】');
+    (c.tips || []).forEach(function(t) { out.push('・' + t); });
+    out.push('');
+  });
+  return out.join('\n').trim();
+}
+
+function hearingText(r) {
+  var out = ['■ 案件について確認すること'];
+  (r.ask || []).forEach(function(g) {
+    out.push('【' + g.topic + '】');
+    (g.questions || []).forEach(function(q) { out.push('・' + q.question + (q.reason ? '(' + q.reason + ')' : '')); });
+  });
+  out.push('', '■ 面談で自分が話すこと');
+  (r.talk || []).forEach(function(g) {
+    out.push('【' + g.topic + '】');
+    (g.points || []).forEach(function(p) { out.push('・' + p); });
+  });
+  return out.join('\n');
+}
+
+function showResults(outputs, quota) {
+  var keys = OUTPUT_ORDER.filter(function(k) { return outputs[k] !== undefined; });
+  var panels = {};
+  keys.forEach(function(k) {
+    panels[k] = k === 'proposal' ? proposalPanel(outputs[k]) : k === 'interview' ? interviewPanel(outputs[k]) : hearingPanel(outputs[k]);
+  });
+
+  var tabs = el('div', { class: 'tabs', role: 'tablist' });
+  var body = el('div', {});
+  var tabButtons = {};
+
+  function select(k) {
+    keys.forEach(function(key) {
+      tabButtons[key].setAttribute('aria-selected', key === k ? 'true' : 'false');
+      panels[key].classList.toggle('hidden', key !== k);
+    });
+  }
+  keys.forEach(function(k) {
+    var b = el('button', { class: 'tab', role: 'tab', type: 'button' }, [OUTPUT_TITLES[k]]);
+    b.addEventListener('click', function() { select(k); });
+    tabButtons[k] = b;
+    tabs.appendChild(b);
+    body.appendChild(panels[k]);
+  });
+  select(keys[0]);
+
   var output = $('output');
   output.innerHTML = '';
-  children.forEach(function(c) { if (c) output.appendChild(c); });
+  if (quota) {
+    output.appendChild(el('p', { class: 'source-note' }, [(quota.mode === 'guest' ? 'ゲスト' : 'ログイン中') + ': 本日の利用 ' + quota.used + ' / ' + quota.limit + '回']));
+  }
+  output.appendChild(tabs);
+  output.appendChild(body);
   output.style.display = 'block';
   output.classList.remove('show');
   requestAnimationFrame(function() { output.classList.add('show'); });
   output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function quotaNote(quota) {
-  if (!quota) return null;
-  return el('p', { class: 'source-note' }, ['本日の利用回数: ' + quota.used + ' / ' + quota.limit]);
-}
+/* ---------- ログイン・ゲスト ---------- */
 
-function questionsSection(result) {
-  var section = el('div', { class: 'section' }, [el('p', { class: 'section-title' }, ['面談で想定される質問'])]);
-
-  if (result.gaps && result.gaps.length) {
-    var gapBox = el('div', { class: 'category', style: 'padding-top:0;border-top:none' }, [
-      el('h3', {}, ['経歴から突っ込まれそうな点'])
-    ]);
-    result.gaps.forEach(function(g) {
-      gapBox.appendChild(el('div', { class: 'gap' }, [
-        el('p', {}, [g.point]),
-        el('p', { class: 'advice' }, [g.advice])
-      ]));
-    });
-    section.appendChild(gapBox);
+function renderMode() {
+  var loggedIn = !!session;
+  $('bar-guest').classList.toggle('hidden', loggedIn);
+  $('bar-account').classList.toggle('hidden', !loggedIn);
+  $('guest-profile').classList.toggle('hidden', loggedIn);
+  $('account-profile').classList.toggle('hidden', !loggedIn);
+  if (loggedIn) {
+    $('login-panel').classList.add('hidden');
+    $('user-label').textContent = session.user.email;
   }
-
-  result.categories.forEach(function(c, i) {
-    section.appendChild(el('div', { class: 'category' }, [
-      el('span', { class: 'index' }, [String(i + 1).padStart(2, '0')]),
-      el('h3', {}, [c.title]),
-      el('h4', {}, ['想定される質問']),
-      el('ul', {}, (c.questions || []).map(function(q) { return el('li', {}, [q]); })),
-      el('h4', {}, ['準備しておくとよいこと']),
-      el('ul', { class: 'tips' }, (c.tips || []).map(function(t) { return el('li', {}, [t]); }))
-    ]));
-  });
-  return section;
 }
 
-function proposalSection(proposal) {
-  var copyBtn = el('button', { class: 'ghost', style: 'margin-top:1.25rem' }, ['提案文をコピー']);
-  copyBtn.addEventListener('click', function() {
-    navigator.clipboard.writeText(proposal).then(function() {
-      copyBtn.textContent = 'コピーしました';
-      setTimeout(function() { copyBtn.textContent = '提案文をコピー'; }, 2000);
-    });
-  });
-  return el('div', { class: 'section' }, [
-    el('p', { class: 'section-title' }, ['応募提案文(下書き)']),
-    el('div', { class: 'proposal-text' }, [proposal]),
-    copyBtn
-  ]);
-}
-
-function showClarify(questions, quota) {
-  var fields = questions.map(function(q) {
-    var ta = el('textarea', { rows: '3', placeholder: 'ご回答(わからなければ空欄でも構いません)' });
-    return { question: q, textarea: ta, node: el('div', { class: 'clarify-item' }, [el('p', {}, [q]), ta]) };
-  });
-
-  var errorNode = el('p', { class: 'msg error' });
-  var submit = el('button', { class: 'primary' }, ['回答して提案文を作成']);
-  var skip = el('button', { class: 'ghost', style: 'margin-left:0.75rem' }, ['このまま作成']);
-
-  function send(answers) {
-    submit.disabled = true; skip.disabled = true;
-    run(answers).finally(function() { submit.disabled = false; skip.disabled = false; });
-  }
-  submit.addEventListener('click', function() {
-    var answers = fields
-      .map(function(f) { return { question: f.question, answer: f.textarea.value.trim() }; })
-      .filter(function(a) { return a.answer; });
-    if (!answers.length) { errorNode.textContent = '少なくとも1つ回答するか、「このまま作成」を選んでください'; return; }
-    send(answers);
-  });
-  skip.addEventListener('click', function() {
-    send([{ question: '追加情報', answer: '特になし。案件内容と経歴から判断して作成してください' }]);
-  });
-
-  showOutput([
-    quotaNote(quota),
-    el('div', { class: 'section' }, [
-      el('p', { class: 'section-title' }, ['より良い提案文にするため、教えてください']),
-      el('p', { class: 'hint' }, ['案件内容と経歴だけでは判断しきれない点です。']),
-      el('div', {}, fields.map(function(f) { return f.node; })),
-      errorNode,
-      el('div', { class: 'row' }, [submit, skip])
-    ])
-  ]);
-}
-
-/* ---------- ログイン・経歴 ---------- */
-
-function renderAuth() {
-  if (!configured) {
-    $('auth-panel').classList.add('hidden');
-    $('profile-local').classList.remove('hidden');
-    var note = $('mode-note');
-    note.textContent = '簡易版で動作しています(ログイン・AI生成は未設定)。テンプレートとキーワード判定による下書きを作成します。案件のURLは読み込まれないため、本文を貼り付けてください。経歴は保存されません。';
-    note.classList.remove('hidden');
-    return;
-  }
-  $('auth-panel').classList.remove('hidden');
-  $('auth-out').classList.toggle('hidden', !!session);
-  $('auth-in').classList.toggle('hidden', !session);
-  $('profile-summary').classList.toggle('hidden', !session);
-  if (session) $('auth-user').textContent = session.user.email + ' でログイン中';
-}
-
-function renderProfileStatus(state) {
+async function loadAccountSummary() {
   var node = $('profile-status');
-  if (state === 'error') node.textContent = '読み込めませんでした。時間をおいて再度お試しください';
-  else if (savedProfile) node.textContent = '登録済み(' + savedProfile.length.toLocaleString() + '文字)';
-  else node.textContent = '未登録です。提案文の作成には登録が必要です';
-  $('profile-edit-link').textContent = savedProfile ? 'マイページで編集' : 'マイページで登録';
+  node.textContent = '読み込み中…';
+  var p = await sb.from('profiles').select('full_name, headline, content, conditions').eq('user_id', session.user.id).maybeSingle();
+  var d = await sb.from('documents').select('id', { count: 'exact', head: true });
+  if (p.error) { node.textContent = '読み込めませんでした。時間をおいて再度お試しください'; return; }
+  var row = p.data || {};
+  var chars = (row.content || '').length + (row.conditions || '').length;
+  var hasProfile = !!(row.full_name || row.headline || chars);
+  var files = d.error ? 0 : (d.count || 0);
+  if (!hasProfile && !files) {
+    node.textContent = '未登録です。応募文の作成には、マイページでの登録が必要です';
+    $('profile-link').textContent = 'マイページで登録';
+  } else {
+    node.textContent = 'プロフィール: ' + (hasProfile ? '登録済み' : '未登録') + ' / 職務経歴書などのファイル: ' + files + '件';
+    $('profile-link').textContent = 'マイページで編集';
+  }
 }
 
-async function loadProfile() {
-  var res = await sb.from('profiles').select('content').eq('user_id', session.user.id).maybeSingle();
-  if (res.error) { renderProfileStatus('error'); return false; }
-  savedProfile = res.data ? res.data.content : '';
-  renderProfileStatus();
-  return true;
-}
+$('open-login').addEventListener('click', function() { $('login-panel').classList.toggle('hidden'); });
 
 $('auth-send').addEventListener('click', async function() {
+  if (!configured) return;
   var email = $('auth-email').value.trim();
   if (!email) { setMsg($('auth-msg'), 'メールアドレスを入力してください', true); return; }
   var btn = $('auth-send');
@@ -336,92 +336,81 @@ $('auth-send').addEventListener('click', async function() {
 
 $('auth-logout').addEventListener('click', function() { sb.auth.signOut(); });
 
+/* ---------- ゲストのファイル読み込み(保存されません) ---------- */
+
+$('guest-file').addEventListener('change', async function(e) {
+  var files = Array.prototype.slice.call(e.target.files);
+  e.target.value = '';
+  if (!files.length) return;
+  var msgs = [];
+  var area = $('guest-text');
+  for (var i = 0; i < files.length; i++) {
+    try {
+      setMsg($('guest-file-msg'), '「' + files[i].name + '」を読み込み中…', false);
+      var r = await DocExtract.extract(files[i]);
+      area.value = (area.value.trim() ? area.value.trim() + '\n\n' : '') + '【' + files[i].name + '】\n' + r.text;
+      msgs.push('「' + files[i].name + '」を読み込みました' + (r.truncated ? '(長いため先頭の一部のみ)' : ''));
+    } catch (err) {
+      msgs.push(err.message);
+    }
+  }
+  var over = area.value.length > GUEST_TEXT_MAX;
+  setMsg($('guest-file-msg'), msgs.join(' / ') + (over ? ' / ' + GUEST_TEXT_MAX.toLocaleString() + '文字を超えた分は使われません' : '') + '(ファイルは保存されません)', over);
+});
+
 /* ---------- 実行 ---------- */
 
-async function run(answers) {
-  var job = $('job-content').value.trim();
-  var mode = currentMode();
-  var errorEl = $('form-error');
+async function run() {
+  if (running) return;
+  var job = $('job').value.trim();
+  var outputs = selectedOutputs();
   var statusEl = $('status');
 
-  if (!job) {
-    setMsg(errorEl, '案件のURLまたはテキストを入力してください', true);
-    errorEl.classList.remove('hidden');
-    return;
-  }
-  errorEl.classList.add('hidden');
+  $('form-error').classList.add('hidden');
+  if (!configured) { showError('現在ご利用いただけません。しばらくしてからお試しください'); return; }
+  if (!job) { showError('案件のURLを入力してください'); return; }
+  if (!outputs.length) { showError('作成するものを1つ以上選んでください'); return; }
 
-  if (!configured) {
-    var profile = $('profile').value.trim();
-    if (mode === 'proposal') {
-      showOutput([proposalSection(generateHeuristicProposal(job, profile))]);
-    } else {
-      showOutput([questionsSection(generateHeuristicQuestions(job))]);
-    }
+  var guestText = session ? '' : $('guest-text').value.trim();
+  if (!session && outputs.indexOf('proposal') !== -1 && !guestText) {
+    showError('応募文の作成には、プロフィール・経歴の入力が必要です。ログインして保存しておくこともできます');
     return;
   }
 
-  if (!session) {
-    setMsg(errorEl, 'ログインしてください', true);
-    errorEl.classList.remove('hidden');
-    return;
-  }
-
-  // マイページで更新された可能性があるため、実行前に最新の登録状況を取得する
-  if (!(await loadProfile())) {
-    setMsg(errorEl, '経歴の読み込みに失敗しました。時間をおいて再度お試しください', true);
-    errorEl.classList.remove('hidden');
-    return;
-  }
-  if (mode === 'proposal' && !savedProfile.trim()) {
-    setMsg(errorEl, '提案文の作成には経歴・実績の登録が必要です。マイページで登録してください', true);
-    errorEl.classList.remove('hidden');
-    return;
-  }
-
+  running = true;
   var btn = $('submit-btn');
   btn.disabled = true;
   var isUrl = /^https?:\/\/\S+$/i.test(job);
-  setMsg(statusEl, answers && answers.length ? '提案文を作成しています…' : (isUrl ? 'URLを読み込んで作成しています…' : '作成しています…'), false);
+  setMsg(statusEl, (isUrl ? 'URLを読み込んで' : '') + '作成しています…(1分ほどかかることがあります)', false);
   statusEl.classList.remove('hidden');
 
   try {
+    var headers = { 'Content-Type': 'application/json' };
+    if (session) headers.Authorization = 'Bearer ' + session.access_token;
     var res = await fetch(CONFIG.WORKER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ mode: mode, input: job, answers: answers || [] })
+      headers: headers,
+      body: JSON.stringify({ outputs: outputs, input: job, guest_text: guestText })
     });
     var data = await res.json().catch(function() { return {}; });
     if (!res.ok) throw new Error(data.error || '作成に失敗しました');
-
-    if (data.mode === 'questions') {
-      showOutput([quotaNote(data.quota), questionsSection(data)]);
-    } else if (data.status === 'need_info') {
-      showClarify(data.questions, data.quota);
-    } else {
-      showOutput([quotaNote(data.quota), proposalSection(data.proposal)]);
-    }
+    showResults(data.outputs, data.quota);
     statusEl.classList.add('hidden');
   } catch (e) {
-    setMsg(statusEl, e.message, true);
+    setMsg(statusEl, e instanceof TypeError ? '通信に失敗しました。ネットワークを確認して、もう一度お試しください' : e.message, true);
   } finally {
+    running = false;
     btn.disabled = false;
   }
 }
 
-$('submit-btn').addEventListener('click', function() { run([]); });
-
-document.querySelectorAll('input[name="mode"]').forEach(function(r) {
-  r.addEventListener('change', function() {
-    document.querySelectorAll('.mode').forEach(function(m) {
-      m.classList.toggle('selected', m.querySelector('input').checked);
-    });
-  });
-});
+$('submit-btn').addEventListener('click', run);
+document.querySelectorAll('input[name="output"]').forEach(function(c) { c.addEventListener('change', updateCost); });
 
 /* ---------- 初期化 ---------- */
 
 (async function init() {
+  updateCost();
   if (configured) {
     var res = await sb.auth.getSession();
     session = res.data.session;
@@ -429,13 +418,16 @@ document.querySelectorAll('input[name="mode"]').forEach(function(r) {
       var changed = (s && s.user.id) !== (session && session.user.id);
       session = s;
       setTimeout(function() {
-        renderAuth();
-        if (changed) { if (s) loadProfile(); else savedProfile = ''; }
+        renderMode();
+        if (changed && s) loadAccountSummary();
       }, 0);
     });
-    if (session) await loadProfile();
+    renderMode();
+    if (session) loadAccountSummary();
+  } else {
+    renderMode();
+    $('open-login').classList.add('hidden');
   }
-  renderAuth();
 })();
 </script>
 </body>

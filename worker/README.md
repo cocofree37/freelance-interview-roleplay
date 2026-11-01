@@ -1,23 +1,39 @@
 # バックエンド(Cloudflare Worker)
 
-ログイン済みユーザーのリクエストを受け、Claude APIで「応募提案文」または「面談の想定質問」を生成します。
-デプロイ手順は、リポジトリ直下の [SETUP.md](../SETUP.md) を参照してください。
+案件のURL(またはテキスト)から、応募文・面談資料・ヒアリングテキストのうち選ばれたものを、Claude APIで作成します。
+ゲストとログインユーザーの両方を受け付けます。デプロイ手順は [SETUP.md](../SETUP.md) を参照してください。
 
 ## API
 
-`POST /` (ヘッダー `Authorization: Bearer <Supabaseのアクセストークン>`)
+`POST /`
 
 | フィールド | 内容 |
 |---|---|
-| `mode` | `proposal`(応募提案文)/ `questions`(面談の想定質問) |
+| `outputs` | 作成するもの。`proposal`(応募文)/ `interview`(面談資料)/ `hearing`(ヒアリングテキスト)のうち1つ以上 |
 | `input` | 案件のURL または テキスト。URLの場合はWorkerが本文を取得する |
-| `answers` | (proposalのみ)追加質問への回答 `[{question, answer}]` |
+| `guest_text` | (ゲストのみ)その場で入力されたプロフィール・経歴。保存されない |
 
-処理の流れ: Supabaseで本人確認と経歴の取得 → 利用回数の消費(上限超過は429)→ (URLなら)本文取得 → Claude呼び出し
+ヘッダー `Authorization: Bearer <Supabaseのアクセストークン>` があればログインユーザー、なければゲストとして扱います。
 
-- `questions`: `{ categories, gaps, quota }`(gaps = 経歴と案件のギャップから突っ込まれそうな点)
-- `proposal` の1回目: 情報が足りなければ `{ status: 'need_info', questions }`(最大3問)、十分なら `{ status: 'done', proposal }`
-- `proposal` に `answers` を付けた2回目: 必ず `{ status: 'done', proposal }`
+処理の順序: 本人確認と保存済みプロフィール・ファイルの読み込み(ログイン時)→ URLの本文取得 → 利用回数の消費 → Claude呼び出し。
+URLを取得できなかった場合は、回数を消費しません。
+
+レスポンス: `{ outputs: { proposal?, interview?, hearing? }, quota: { used, limit, mode } }`
+
+- `proposal`: 応募文(文字列)
+- `interview`: `{ categories, gaps }`
+- `hearing`: `{ ask, talk }`
+
+## 利用回数
+
+| 対象 | 管理場所 | 上限(1日・日本時間) |
+|---|---|---|
+| ゲスト(回線ごと) | Cloudflare KV(`QUOTA`)。IPはハッシュ化して保存し、2日で消える | 9回 |
+| ゲスト(全体) | 同上 | 60回 |
+| ログインユーザー(1人) | Supabase の `consume_quota` | 15回 |
+| ログインユーザー(全体) | 同上 | 100回 |
+
+作成するものを1つ選ぶごとに1回消費します。
 
 ## 設定
 
@@ -25,5 +41,6 @@
 |---|---|---|
 | シークレット | `ANTHROPIC_API_KEY` | `wrangler secret put ANTHROPIC_API_KEY` |
 | 変数 | `SUPABASE_URL` / `SUPABASE_ANON_KEY` | [wrangler.toml](wrangler.toml) |
+| KV | `QUOTA` | [wrangler.toml](wrangler.toml)(初回の `wrangler deploy` で自動作成) |
 
 CORSは `src/index.js` の `ALLOWED_ORIGIN`(`https://cocofree37.github.io`)のみ許可しています。
