@@ -28,7 +28,7 @@
   <div class="hero-inner">
     <span class="hero-pill">INTERVIEW PREP</span>
     <h1>Ready to <span class="grad">Apply.</span></h1>
-    <p class="hero-lead"><span class="phrase">案件のURLを入れて、</span><span class="phrase">作りたいものを選ぶだけ。</span><br /><span class="phrase">応募文・面談資料・ヒアリングテキストを、</span><span class="phrase">あなたの経歴を踏まえて</span><span class="phrase">作成します。</span></p>
+    <p class="hero-lead"><span class="phrase">案件の内容を貼り付けて、</span><span class="phrase">作りたいものを選ぶだけ。</span><br /><span class="phrase">応募文・面談資料・ヒアリングテキストを、</span><span class="phrase">あなたの経歴を踏まえて</span><span class="phrase">作成します。</span></p>
   </div>
 </header>
 
@@ -59,9 +59,10 @@
 
   <section class="block">
     <span class="eyebrow">01 · Job</span>
-    <label class="field-label" for="job">案件のURL</label>
-    <textarea id="job" rows="3" placeholder="案件ページのURLを貼り付け"></textarea>
-    <p class="hint">ページの本文を自動で取得します。ログインが必要なページなどで取得できない場合は、案件の本文をここに貼り付けてください。</p>
+    <label class="field-label" for="job">案件の内容</label>
+    <textarea id="job" rows="10" placeholder="募集ページの本文をコピーして貼り付け
+(業務内容、必須・歓迎スキル、稼働条件、単価、募集背景など)"></textarea>
+    <p class="hint">募集ページの本文を、そのままコピーして貼り付けてください。条件や求めるスキルまで含めるほど、内容が具体的になります。</p>
   </section>
 
   <section class="block" id="guest-profile">
@@ -554,7 +555,7 @@ async function run(opts) {
 
   $('form-error').classList.add('hidden');
   if (!configured) { showError('現在ご利用いただけません。しばらくしてからお試しください'); return; }
-  if (!job) { showError('案件のURLを入力してください'); return; }
+  if (!job) { showError('案件の内容を貼り付けてください'); return; }
   if (!outputs.length) { showError('作成するものを1つ選んでください'); return; }
 
   var guestText = session ? '' : $('guest-text').value.trim();
@@ -569,8 +570,7 @@ async function run(opts) {
   var btn = $('submit-btn');
   btn.disabled = true;
   document.querySelectorAll('#output button').forEach(function(b) { b.disabled = true; });
-  var isUrl = /^https?:\/\/\S+$/i.test(job);
-  setMsg(statusEl, (isUrl ? 'URLを読み込んで' : '') + '作成しています…(1分ほどかかることがあります)', false);
+  setMsg(statusEl, '作成しています…(1分ほどかかることがあります)', false);
   statusEl.classList.remove('hidden');
 
   try {
