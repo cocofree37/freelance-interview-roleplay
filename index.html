@@ -75,7 +75,7 @@
       <label class="mode selected">
         <input type="checkbox" name="output" value="interview" checked />
         <span class="mode-title">面談資料</span>
-        <span class="mode-desc">想定質問と準備事項、突っ込まれそうな点をまとめます</span>
+        <span class="mode-desc">想定質問と回答の骨子、突っ込まれそうな点をまとめます</span>
       </label>
       <label class="mode selected">
         <input type="checkbox" name="output" value="hearing" checked />
@@ -84,6 +84,12 @@
       </label>
     </div>
     <p id="cost" class="hint"></p>
+  </div>
+
+  <div class="block" id="form-items-block">
+    <label class="field-label" for="form-items">応募フォームの入力項目(任意)</label>
+    <textarea id="form-items" rows="4" placeholder="1行に1項目。例:&#10;必要要件に関する自己アピール(必須)&#10;歓迎要件に関する自己アピール&#10;意気込み・その他自己アピール(400文字)"></textarea>
+    <p class="hint">応募フォームに入力欄が複数ある場合は、項目名を貼り付けると、項目ごとに書き分けます。文字数の上限は「(400文字)」のように書くと、その範囲に収めます。空欄の場合は、1通の応募文を作成します。</p>
   </div>
 
   <div id="form-error" class="msg error hidden"></div>
@@ -105,10 +111,13 @@ var configured = !!(CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && CONFIG.WO
 var sb = configured ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null;
 var session = null;
 var running = false;
+var state = { result: null, formItems: [], tab: null };
 
 var OUTPUT_ORDER = ['proposal', 'interview', 'hearing'];
 var OUTPUT_TITLES = { proposal: '応募文', interview: '面談資料', hearing: 'ヒアリングテキスト' };
+var VERDICT_NOTES = { '応募推奨': 'verdict-good', '条件次第': 'verdict-mid', '見送り推奨': 'verdict-bad' };
 var GUEST_TEXT_MAX = 20000;
+var MAX_FORM_ITEMS = 10;
 
 function $(id) { return document.getElementById(id); }
 
@@ -144,21 +153,39 @@ function selectedOutputs() {
 }
 
 function updateCost() {
-  var n = selectedOutputs().length;
-  $('cost').textContent = n ? n + '回分の利用回数を消費します。' : '作成するものを1つ以上選んでください。';
+  var picked = selectedOutputs();
+  $('cost').textContent = picked.length ? picked.length + '回分の利用回数を消費します。' : '作成するものを1つ以上選んでください。';
+  $('form-items-block').classList.toggle('hidden', picked.indexOf('proposal') === -1);
   document.querySelectorAll('#choices .mode').forEach(function(m) {
     m.classList.toggle('selected', m.querySelector('input').checked);
   });
 }
 
+/* ---------- 応募フォームの項目 ---------- */
+
+// 1行に1項目。「(400文字)」「1000文字程度」などから、文字数の上限を読み取る
+function parseFormItems(text) {
+  return String(text || '').split('\n').map(function(line) { return line.trim(); }).filter(Boolean).slice(0, MAX_FORM_ITEMS).map(function(line) {
+    var m = /(\d{2,5})\s*(?:文字|字)/.exec(line);
+    return { label: line, limit: m ? parseInt(m[1], 10) : 0 };
+  });
+}
+
+// 改行を除いた字数と、フォームで数えられやすい「改行を2文字として数えた」字数
+function countText(text) {
+  var breaks = (text.match(/\n/g) || []).length;
+  var chars = Array.from(text.replace(/\n/g, '')).length;
+  return { chars: chars, withBreaks: chars + breaks * 2 };
+}
+
 /* ---------- 結果の表示 ---------- */
 
-function copyButton(getText) {
-  var btn = el('button', { class: 'ghost', style: 'margin-top:2rem' }, ['コピー']);
+function copyButton(label, getText, style) {
+  var btn = el('button', { class: 'ghost', type: 'button', style: style || 'margin-top:1.5rem' }, [label]);
   btn.addEventListener('click', function() {
     navigator.clipboard.writeText(getText()).then(function() {
       btn.textContent = 'コピーしました';
-      setTimeout(function() { btn.textContent = 'コピー'; }, 2000);
+      setTimeout(function() { btn.textContent = label; }, 2000);
     });
   });
   return btn;
@@ -166,6 +193,63 @@ function copyButton(getText) {
 
 function list(items, cls) {
   return el('ul', cls ? { class: cls } : {}, (items || []).map(function(t) { return el('li', {}, [t]); }));
+}
+
+function assessmentCard(a) {
+  var box = el('div', { class: 'assessment' }, [
+    el('div', { class: 'assessment-head' }, [
+      el('span', { class: 'verdict ' + (VERDICT_NOTES[a.verdict] || '') }, [a.verdict || '']),
+      el('span', { class: 'assessment-title' }, ['案件の見立て'])
+    ]),
+    el('p', { class: 'assessment-summary' }, [a.summary || ''])
+  ]);
+  if (a.strengths && a.strengths.length) { box.appendChild(el('h4', {}, ['勝ち筋'])); box.appendChild(list(a.strengths)); }
+  if (a.concerns && a.concerns.length) { box.appendChild(el('h4', {}, ['懸念・確認したい条件'])); box.appendChild(list(a.concerns, 'tips')); }
+  return box;
+}
+
+function proposalPanel(p) {
+  var answers = p.answers || [];
+  var items = state.formItems;
+  var over = [];
+  var box = el('div', {});
+
+  answers.forEach(function(a, i) {
+    var limit = items[i] && items[i].limit ? items[i].limit : 0;
+    var c = countText(a.text);
+    var isOver = limit && c.withBreaks > limit;
+    if (isOver) over.push({ label: a.label, now: c.withBreaks, limit: limit });
+
+    var countLine = c.chars + '字(改行込み ' + c.withBreaks + '字)' + (limit ? ' / 上限' + limit + '字' : '');
+    if (isOver) countLine += ' — ' + (c.withBreaks - limit) + '字超えています';
+
+    box.appendChild(el('div', { class: 'answer' }, [
+      answers.length > 1 || a.label !== '応募文' ? el('h3', { class: 'answer-label' }, [a.label]) : null,
+      el('div', { class: 'proposal-text' }, [a.text]),
+      el('p', { class: 'counter' + (isOver ? ' over' : ''), style: 'text-align:left' }, [countLine]),
+      copyButton('コピー', function() { return a.text; }, 'margin-top:0.6rem')
+    ]));
+  });
+
+  var actions = el('div', { class: 'row' });
+  if (answers.length > 1) {
+    actions.appendChild(copyButton('すべてコピー', function() {
+      return answers.map(function(a) { return '■ ' + a.label + '\n' + a.text; }).join('\n\n');
+    }, 'margin-top:0'));
+  }
+  if (over.length) {
+    var fix = el('button', { class: 'ghost', type: 'button' }, ['上限に収めて作り直す(1回分を消費)']);
+    fix.addEventListener('click', function() {
+      run({
+        only: ['proposal'],
+        feedback: '次の項目が文字数の上限を超えました。上限の95%以内に収まるよう、内容を絞って書き直してください: '
+          + over.map(function(o) { return '「' + o.label.slice(0, 40) + '」(いま' + o.now + '字/上限' + o.limit + '字)'; }).join('、')
+      });
+    });
+    actions.appendChild(fix);
+  }
+  if (actions.children.length) box.appendChild(actions);
+  return box;
 }
 
 function interviewPanel(r) {
@@ -177,6 +261,13 @@ function interviewPanel(r) {
     });
     box.appendChild(gapBox);
   }
+  if (r.scripts && r.scripts.length) {
+    var scriptBox = el('div', { class: 'category', style: r.gaps && r.gaps.length ? '' : 'padding-top:0;border-top:none' }, [el('h3', {}, ['回答の骨子'])]);
+    r.scripts.forEach(function(s) {
+      scriptBox.appendChild(el('div', { class: 'qa' }, [el('p', { class: 'q' }, [s.question]), list(s.outline, 'tips')]));
+    });
+    box.appendChild(scriptBox);
+  }
   (r.categories || []).forEach(function(c, i) {
     box.appendChild(el('div', { class: 'category' }, [
       el('span', { class: 'index' }, [String(i + 1).padStart(2, '0')]),
@@ -187,7 +278,7 @@ function interviewPanel(r) {
       list(c.tips, 'tips')
     ]));
   });
-  box.appendChild(copyButton(function() { return interviewText(r); }));
+  box.appendChild(copyButton('コピー', function() { return interviewText(r); }));
   return box;
 }
 
@@ -209,12 +300,8 @@ function hearingPanel(r) {
       list(g.points)
     ]));
   });
-  box.appendChild(copyButton(function() { return hearingText(r); }));
+  box.appendChild(copyButton('コピー', function() { return hearingText(r); }));
   return box;
-}
-
-function proposalPanel(text) {
-  return el('div', {}, [el('div', { class: 'proposal-text' }, [text]), copyButton(function() { return text; })]);
 }
 
 function interviewText(r) {
@@ -222,6 +309,11 @@ function interviewText(r) {
   if (r.gaps && r.gaps.length) {
     out.push('■ 経歴から突っ込まれそうな点');
     r.gaps.forEach(function(g) { out.push('・' + g.point, '  → ' + g.advice); });
+    out.push('');
+  }
+  if (r.scripts && r.scripts.length) {
+    out.push('■ 回答の骨子');
+    r.scripts.forEach(function(s) { out.push('【' + s.question + '】'); (s.outline || []).forEach(function(o) { out.push('・' + o); }); });
     out.push('');
   }
   (r.categories || []).forEach(function(c) {
@@ -248,11 +340,43 @@ function hearingText(r) {
   return out.join('\n');
 }
 
-function showResults(outputs, quota) {
-  var keys = OUTPUT_ORDER.filter(function(k) { return outputs[k] !== undefined; });
+function confirmationsSection(items, cost) {
+  var fields = items.map(function(c) {
+    var ta = el('textarea', { rows: '2', placeholder: '分かる範囲で。分からなければ空欄で構いません' });
+    return {
+      question: c.question,
+      textarea: ta,
+      node: el('div', { class: 'clarify-item' }, [
+        el('p', {}, [c.question]),
+        el('p', { class: 'why' }, ['確認する理由: ' + c.why]),
+        c.until_then ? el('p', { class: 'why' }, ['いまの本文では: ' + c.until_then]) : null,
+        ta
+      ])
+    };
+  });
+  var errorNode = el('p', { class: 'msg error' });
+  var go = el('button', { class: 'ghost', type: 'button', style: 'margin-top:1.5rem' }, ['回答を反映して作り直す(' + cost + '回分を消費)']);
+  go.addEventListener('click', function() {
+    var answers = fields.map(function(f) { return { question: f.question, answer: f.textarea.value.trim() }; }).filter(function(a) { return a.answer; });
+    if (!answers.length) { errorNode.textContent = '回答を1つ以上入力してください'; return; }
+    run({ answers: answers });
+  });
+  return el('div', { class: 'section' }, [
+    el('p', { class: 'section-title' }, ['確認したいこと']),
+    el('p', { class: 'hint', style: 'margin-top:-1rem;margin-bottom:1rem' }, ['事実が確認できないものは、本文に書かずにいます。答えられるものだけで構いません。回答すると、本文に反映して作り直せます。']),
+    el('div', {}, fields.map(function(f) { return f.node; })),
+    errorNode,
+    go
+  ]);
+}
+
+function showResults() {
+  var data = state.result;
+  var keys = OUTPUT_ORDER.filter(function(k) { return data.outputs[k] !== undefined; });
   var panels = {};
   keys.forEach(function(k) {
-    panels[k] = k === 'proposal' ? proposalPanel(outputs[k]) : k === 'interview' ? interviewPanel(outputs[k]) : hearingPanel(outputs[k]);
+    var v = data.outputs[k];
+    panels[k] = k === 'proposal' ? proposalPanel(v) : k === 'interview' ? interviewPanel(v) : hearingPanel(v);
   });
 
   var tabs = el('div', { class: 'tabs', role: 'tablist' });
@@ -260,6 +384,7 @@ function showResults(outputs, quota) {
   var tabButtons = {};
 
   function select(k) {
+    state.tab = k;
     keys.forEach(function(key) {
       tabButtons[key].setAttribute('aria-selected', key === k ? 'true' : 'false');
       panels[key].classList.toggle('hidden', key !== k);
@@ -272,19 +397,22 @@ function showResults(outputs, quota) {
     tabs.appendChild(b);
     body.appendChild(panels[k]);
   });
-  select(keys[0]);
+  select(keys.indexOf(state.tab) !== -1 ? state.tab : keys[0]);
 
   var output = $('output');
   output.innerHTML = '';
-  if (quota) {
-    output.appendChild(el('p', { class: 'source-note' }, [(quota.mode === 'guest' ? 'ゲスト' : 'ログイン中') + ': 本日の利用 ' + quota.used + ' / ' + quota.limit + '回']));
+  if (data.quota) {
+    output.appendChild(el('p', { class: 'source-note' }, [(data.quota.mode === 'guest' ? 'ゲスト' : 'ログイン中') + ': 本日の利用 ' + data.quota.used + ' / ' + data.quota.limit + '回']));
   }
+  if (data.assessment) output.appendChild(assessmentCard(data.assessment));
   output.appendChild(tabs);
   output.appendChild(body);
+  if (data.confirmations && data.confirmations.length) {
+    output.appendChild(confirmationsSection(data.confirmations, state.lastCost || keys.length));
+  }
   output.style.display = 'block';
   output.classList.remove('show');
   requestAnimationFrame(function() { output.classList.add('show'); });
-  output.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 /* ---------- ログイン・ゲスト ---------- */
@@ -360,10 +488,12 @@ $('guest-file').addEventListener('change', async function(e) {
 
 /* ---------- 実行 ---------- */
 
-async function run() {
+// opts: { answers, feedback, only } 。only は一部の出力だけを作り直すときに指定する
+async function run(opts) {
   if (running) return;
+  opts = opts || {};
   var job = $('job').value.trim();
-  var outputs = selectedOutputs();
+  var outputs = opts.only || selectedOutputs();
   var statusEl = $('status');
 
   $('form-error').classList.add('hidden');
@@ -377,9 +507,12 @@ async function run() {
     return;
   }
 
+  var formItems = outputs.indexOf('proposal') !== -1 ? parseFormItems($('form-items').value) : [];
+
   running = true;
   var btn = $('submit-btn');
   btn.disabled = true;
+  document.querySelectorAll('#output button').forEach(function(b) { b.disabled = true; });
   var isUrl = /^https?:\/\/\S+$/i.test(job);
   setMsg(statusEl, (isUrl ? 'URLを読み込んで' : '') + '作成しています…(1分ほどかかることがあります)', false);
   statusEl.classList.remove('hidden');
@@ -390,21 +523,36 @@ async function run() {
     var res = await fetch(CONFIG.WORKER_URL, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({ outputs: outputs, input: job, guest_text: guestText })
+      body: JSON.stringify({
+        outputs: outputs, input: job, guest_text: guestText,
+        form_items: formItems, answers: opts.answers || [], feedback: opts.feedback || ''
+      })
     });
     var data = await res.json().catch(function() { return {}; });
     if (!res.ok) throw new Error(data.error || '作成に失敗しました');
-    showResults(data.outputs, data.quota);
+
+    if (opts.only && state.result) {
+      // 一部だけの作り直し。見立てと確認事項は、前回のものを残す
+      Object.keys(data.outputs).forEach(function(k) { state.result.outputs[k] = data.outputs[k]; });
+      state.result.quota = data.quota;
+    } else {
+      state.result = data;
+      state.lastCost = outputs.length;
+    }
+    if (formItems.length || !opts.only) state.formItems = formItems;
+    showResults();
     statusEl.classList.add('hidden');
+    if (!opts.only || !opts.feedback) $('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
     setMsg(statusEl, e instanceof TypeError ? '通信に失敗しました。ネットワークを確認して、もう一度お試しください' : e.message, true);
+    document.querySelectorAll('#output button').forEach(function(b) { b.disabled = false; });
   } finally {
     running = false;
     btn.disabled = false;
   }
 }
 
-$('submit-btn').addEventListener('click', run);
+$('submit-btn').addEventListener('click', function() { run(); });
 document.querySelectorAll('input[name="output"]').forEach(function(c) { c.addEventListener('change', updateCost); });
 
 /* ---------- 初期化 ---------- */

@@ -225,3 +225,24 @@ a.ghost-link:hover { background: var(--line-soft); }
   font-family: "Zen Old Mincho", serif; font-weight: 500; font-size: 17px; margin: 3rem 0 1rem;
 }
 .sub-title:first-child { margin-top: 0; }
+
+.assessment { border: 1px solid var(--line); background: var(--paper); padding: 1.6rem 1.8rem; margin-bottom: 3rem; }
+.assessment-head { display: flex; align-items: center; gap: 0.9rem; margin-bottom: 0.9rem; }
+.assessment-title { font-family: 'Zen Old Mincho', serif; font-size: 17px; }
+.assessment-summary { margin: 0; font-size: 15px; line-height: 1.9; }
+.assessment h4 { font-size: 11px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 1.3rem 0 0.5rem; }
+.assessment ul { margin: 0; padding: 0; list-style: none; }
+.assessment ul li { font-size: 14px; line-height: 1.9; padding-left: 1.3rem; position: relative; }
+.assessment ul li::before { content: ''; position: absolute; left: 0; top: 0.85em; width: 5px; height: 1px; background: var(--ink); }
+.assessment ul.tips li { color: var(--ink-soft); }
+.assessment ul.tips li::before { background: var(--ink-soft); }
+.verdict { font-size: 12px; letter-spacing: 0.12em; padding: 0.25rem 0.8rem; border: 1px solid var(--ink); }
+.verdict-good { background: var(--ink); color: var(--paper); }
+.verdict-bad { border-color: var(--alert); color: var(--alert); }
+
+.answer + .answer { margin-top: 3rem; }
+.answer-label { font-family: 'Zen Old Mincho', serif; font-weight: 500; font-size: 17px; margin: 0 0 0.9rem; }
+.clarify-item { margin-top: 1.8rem; }
+.clarify-item p { margin: 0 0 0.5rem; font-size: 15px; line-height: 1.8; }
+.clarify-item p.why { font-size: 13px; color: var(--ink-soft); margin-bottom: 0.3rem; }
+.clarify-item textarea { margin-top: 0.6rem; }
