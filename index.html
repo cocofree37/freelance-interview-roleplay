@@ -338,6 +338,52 @@ function interviewPanel(r) {
   return box;
 }
 
+var PPTX_URL = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+
+function loadPptxLib() {
+  if (window.PptxGenJS) return Promise.resolve();
+  return new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = PPTX_URL;
+    s.onload = resolve;
+    s.onerror = function() { reject(new Error('PowerPoint作成の部品を読み込めませんでした。通信を確認して、もう一度お試しください')); };
+    document.head.appendChild(s);
+  });
+}
+
+// スライドの構成案を .pptx にして保存する。1枚目は表紙、2枚目以降は白地。話すことは発表者ノートに入れる
+async function exportPptx(r) {
+  await loadPptxLib();
+  var NAVY = '0E3A59', ORANGE = 'F57C00', FONT = 'Yu Gothic';
+  var pptx = new window.PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+  pptx.title = '面談用スライド';
+  var pages = r.pages || [];
+  pages.forEach(function(g, i) {
+    var slide = pptx.addSlide();
+    var bullets = (g.bullets || []).map(function(b) {
+      return { text: b, options: { bullet: i !== 0, breakLine: true, paraSpaceAfter: 14 } };
+    });
+    if (i === 0) {
+      slide.background = { color: NAVY };
+      slide.addShape(pptx.ShapeType.rect, { x: 0.9, y: 2.0, w: 0.9, h: 0.09, fill: { color: ORANGE }, line: { color: ORANGE } });
+      slide.addText(g.title, { x: 0.9, y: 2.2, w: 11.5, h: 1.7, fontFace: FONT, margin: 0, fontSize: 34, bold: true, color: 'FFFFFF', valign: 'top' });
+      slide.addText(bullets, { x: 0.9, y: 4.1, w: 11.5, h: 2.6, fontFace: FONT, margin: 0, fontSize: 20, color: 'D6E0E8', valign: 'top' });
+    } else {
+      slide.background = { color: 'FFFFFF' };
+      slide.addShape(pptx.ShapeType.rect, { x: 0, y: 0, w: 0.28, h: 7.5, fill: { color: NAVY }, line: { color: NAVY } });
+      slide.addText(g.title, { x: 0.9, y: 0.5, w: 11.6, h: 1.1, fontFace: FONT, margin: 0, fontSize: 28, bold: true, color: NAVY, valign: 'middle' });
+      slide.addShape(pptx.ShapeType.rect, { x: 0.9, y: 1.7, w: 0.9, h: 0.07, fill: { color: ORANGE }, line: { color: ORANGE } });
+      slide.addText(bullets, { x: 0.9, y: 2.1, w: 11.6, h: 4.5, fontFace: FONT, margin: 0, fontSize: 22, color: '14212B', valign: 'top' });
+      slide.addText(String(i + 1) + ' / ' + pages.length, { x: 11.3, y: 6.95, w: 1.5, h: 0.35, fontFace: FONT, fontSize: 11, color: '5B6B78', align: 'right' });
+    }
+    if (g.notes) slide.addNotes(g.notes);
+  });
+  var d = new Date();
+  var stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  await pptx.writeFile({ fileName: '面談用スライド_' + stamp + '.pptx' });
+}
+
 function slidesPanel(r) {
   var box = el('div', {});
   var pages = r.pages || [];
@@ -351,7 +397,26 @@ function slidesPanel(r) {
       g.notes ? el('p', { class: 'slide-notes' }, [el('b', {}, ['話すこと: ']), g.notes]) : null
     ]));
   });
-  box.appendChild(copyButton('コピー', function() { return slidesText(r); }));
+  var actions = el('div', { class: 'actions' }, [copyButton('テキストをコピー', function() { return slidesText(r); }, 'margin-top:0')]);
+  var dl = el('button', { class: 'primary', type: 'button' }, ['PowerPointで書き出す']);
+  var dlMsg = el('p', { class: 'msg error hidden' });
+  dl.addEventListener('click', async function() {
+    dl.disabled = true;
+    dl.textContent = '書き出し中…';
+    dlMsg.classList.add('hidden');
+    try {
+      await exportPptx(r);
+    } catch (e) {
+      dlMsg.textContent = e.message || 'PowerPointの書き出しに失敗しました';
+      dlMsg.classList.remove('hidden');
+    } finally {
+      dl.disabled = false;
+      dl.textContent = 'PowerPointで書き出す';
+    }
+  });
+  actions.insertBefore(dl, actions.firstChild);
+  box.appendChild(actions);
+  box.appendChild(dlMsg);
   return box;
 }
 
