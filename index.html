@@ -14,11 +14,11 @@
 <nav class="site-nav" aria-label="メニュー">
   <a class="brand" href="./">準備アシスト</a>
   <div id="bar-guest" class="nav-actions hidden">
-    <span class="nav-note">ゲストモード(保存されません)</span>
-    <button id="open-login" class="nav-btn" type="button">ログイン</button>
+    <span class="nav-status"><strong>ゲストモード</strong><small>入力内容は保存されません</small></span>
+    <button id="open-login" class="nav-btn" type="button">ログイン / 登録</button>
   </div>
   <div id="bar-account" class="nav-actions hidden">
-    <span class="nav-note" id="user-label"></span>
+    <span class="nav-status is-account"><strong>ログイン中</strong><small id="user-label"></small></span>
     <a class="nav-btn" href="mypage.html">マイページ</a>
     <button id="auth-logout" class="nav-link" type="button">ログアウト</button>
   </div>
@@ -28,7 +28,7 @@
   <div class="hero-inner">
     <span class="hero-pill">INTERVIEW PREP</span>
     <h1>Ready to <span class="grad">Apply.</span></h1>
-    <p class="hero-lead">案件のURLを入れて、作りたいものを選ぶだけ。応募文、面談資料、ヒアリングテキストを、あなたの経歴を踏まえて作成します。</p>
+    <p class="hero-lead"><span class="phrase">案件のURLを入れて、</span><span class="phrase">作りたいものを選ぶだけ。</span><br /><span class="phrase">応募文・面談資料・ヒアリングテキストを、</span><span class="phrase">あなたの経歴を踏まえて</span><span class="phrase">作成します。</span></p>
   </div>
 </header>
 
@@ -94,7 +94,11 @@
         <span class="mode-desc">案件の不明点を聞く質問と、自分が話すことを整理します</span>
       </label>
     </div>
-    <p id="cost" class="hint"></p>
+    <div class="usage-box">
+      <span class="usage-title">利用回数について</span>
+      <span class="usage-now" id="cost"></span>
+      <span class="usage-note" id="usage-note"></span>
+    </div>
   </section>
 
   <section class="block" id="form-items-block">
@@ -173,7 +177,17 @@ function selectedOutputs() {
 
 function updateCost() {
   var picked = selectedOutputs();
-  $('cost').textContent = picked.length ? picked.length + '回分の利用回数を消費します。' : '作成するものを1つ以上選んでください。';
+  var now = $('cost');
+  now.textContent = '';
+  if (picked.length) {
+    now.appendChild(document.createTextNode('今回の作成で使う利用回数: '));
+    now.appendChild(el('b', {}, [String(picked.length)]));
+    now.appendChild(document.createTextNode(' 回'));
+  } else {
+    now.textContent = '作成するものを1つ以上選んでください。';
+  }
+  $('usage-note').textContent = '作成するものを1つ選ぶごとに、1日の利用回数を1回分使います。1日の上限は、'
+    + (session ? 'ログイン中は15回' : 'ゲストは9回(ログインすると15回)') + 'です。';
   $('form-items-block').classList.toggle('hidden', picked.indexOf('proposal') === -1);
   document.querySelectorAll('#choices .mode').forEach(function(m) {
     m.classList.toggle('selected', m.querySelector('input').checked);
@@ -438,6 +452,7 @@ function showResults() {
 
 function renderMode() {
   var loggedIn = !!session;
+  updateCost();
   $('bar-guest').classList.toggle('hidden', loggedIn);
   $('bar-account').classList.toggle('hidden', !loggedIn);
   $('guest-profile').classList.toggle('hidden', loggedIn);
@@ -467,7 +482,12 @@ async function loadAccountSummary() {
   }
 }
 
-$('open-login').addEventListener('click', function() { $('login-panel').classList.toggle('hidden'); });
+$('open-login').addEventListener('click', function() {
+  var panel = $('login-panel');
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(function() { $('auth-email').focus(); }, 350);
+});
 
 $('auth-send').addEventListener('click', async function() {
   if (!configured) return;
