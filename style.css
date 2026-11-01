@@ -682,12 +682,13 @@ button.danger:hover { background: #fdf2f2; border-color: #d99; }
 .s-card.is-dark h4 { color: #ffa04d; }
 .s-card.is-dark li { color: #fff; }
 .s-compare .s-card h4 { font-size: 2cqw; color: var(--navy); }
+.s-compare .s-card.is-dark h4 { color: #ffa04d; }
 .s-compare .s-card li { font-size: 1.7cqw; }
 
 .s-stats.cols-1 { grid-template-columns: 1fr; }
 .s-stats.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .s-stats.cols-3 { grid-template-columns: repeat(3, 1fr); }
-.s-stat { display: flex; flex-direction: column; justify-content: center; padding: 1.4cqw 2cqw; background: #fff; border: 1px solid #d9e1e7; border-radius: 0.9cqw; min-height: 0; }
+.s-stat { min-height: 15cqw; display: flex; flex-direction: column; justify-content: center; padding: 1.4cqw 2cqw; background: #fff; border: 1px solid #d9e1e7; border-radius: 0.9cqw; }
 .s-stat p { margin: 0; }
 .s-stat .value { font-size: 4.4cqw; line-height: 1.1; font-weight: 800; color: #f57c00; }
 .s-stat .value small { font-size: 1.8cqw; font-weight: 800; margin-left: 0.4cqw; }
