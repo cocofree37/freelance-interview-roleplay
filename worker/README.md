@@ -27,7 +27,7 @@ URLを取得できなかった場合は、回数を消費しません。
 - `confirmations`: 確認したいこと `[{ question, why, until_then }]`(最大5件。常に付く)
 - `outputs.proposal`: `{ answers: [{ label, text }] }`(項目ごとの回答。`form_items` が無ければ1件)
 - `outputs.interview`: `{ categories, gaps, scripts }`
-- `outputs.slides`: `{ pages: [{ title, bullets, notes }] }`
+- `outputs.slides`: `{ presenter, pages: [{ layout, title, lead, message, notes, sections | bullets, ... }] }`(`layout` は `cover` / `cards` / `stats` / `timeline` / `compare` / `bullets`)
 
 `answers` や `feedback` を付けて同じ案件で呼び直すと、それらを反映して作り直します(利用回数は、選んだ出力の数だけ、あらためて消費します)。
 

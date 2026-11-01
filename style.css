@@ -623,30 +623,101 @@ button.danger:hover { background: #fdf2f2; border-color: #d99; }
   * { transition: none !important; }
 }
 
-/* ---------- 面談用スライド ---------- */
+/* ---------- 面談用スライド ----------
+   16:9 のカードを、幅に比例して拡縮する(1cqw = スライド幅の1%)。
+   狭い画面では、横にスクロールして実寸に近い大きさで見られる */
 
 .slide-wrap { margin: 20px 0 24px; }
-.slide {
-  position: relative;
-  min-height: 170px;
-  padding: 26px 36px 34px;
-  border-radius: 12px;
-  background: var(--white);
-  border: 1px solid var(--line);
-  border-top: 6px solid var(--navy);
-  box-shadow: 0 2px 10px rgba(7, 26, 41, 0.08);
-  overflow: hidden;
+.slide-scroll { overflow-x: auto; border-radius: 10px; }
+@media (min-width: 1000px) {
+  .slide-wrap { margin-left: -80px; margin-right: -80px; }
 }
-.slide-no { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: var(--ink-soft); }
-.slide h3 { margin: 0 0 14px; font-size: 20px; line-height: 1.5; color: var(--navy); }
-.slide ul { margin: 0; padding-left: 1.2em; }
-.slide li { font-size: 15px; line-height: 1.8; }
+.slide {
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  min-width: 700px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #f7f9fb;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(7, 26, 41, 0.08);
+  padding: 4.2cqw 4.4cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqw;
+  color: var(--ink);
+}
+.slide ul { margin: 0; padding-left: 1.3em; }
+.slide li { font-size: 1.5cqw; line-height: 1.75; color: #33424f; margin-bottom: 0.2cqw; }
+.s-title { margin: 0; font-size: 2.9cqw; line-height: 1.35; font-weight: 800; color: var(--navy); letter-spacing: 0.01em; }
+.s-lead { margin: -0.8cqw 0 0; font-size: 1.45cqw; line-height: 1.6; color: #5b7b8f; }
+.s-foot { position: absolute; left: 4.4cqw; bottom: 1.5cqw; font-size: 1cqw; color: #8aa0af; }
+.s-no { position: absolute; right: 4.4cqw; bottom: 1.5cqw; font-size: 1cqw; color: #8aa0af; }
+.s-message {
+  margin: 0.6cqw 0 0;
+  padding: 1.4cqw 2cqw;
+  border-radius: 0.8cqw;
+  background: #fff7ed;
+  border: 1px solid #fde0bf;
+  font-size: 1.8cqw;
+  font-weight: 800;
+  color: #a85300;
+}
+
+.s-cards, .s-compare, .s-stats { display: grid; gap: 1.5cqw; }
+.s-cards.cols-1 { grid-template-columns: 1fr; }
+.s-cards.cols-2, .s-compare { grid-template-columns: repeat(2, 1fr); }
+.s-cards.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.s-cards.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.s-cards .s-card, .s-compare .s-card { min-height: 21cqw; }
+.s-card { padding: 1.8cqw 2cqw; background: #fff; border: 1px solid #d9e1e7; border-radius: 0.9cqw; min-height: 0; overflow: hidden; }
+.s-card h4 { display: flex; align-items: center; gap: 0.8cqw; margin: 0 0 1cqw; font-size: 1.9cqw; line-height: 1.4; font-weight: 800; }
+.s-card .dot { flex: none; width: 1.5cqw; height: 1.5cqw; border-radius: 50%; background: #0e3a59; }
+.s-card .dot.c1 { background: #f57c00; }
+.s-card .dot.c2 { background: #5b7b8f; }
+.s-card .dot.c3 { background: #2e7d5b; }
+.s-card.is-dark { background: #0e3a59; border-color: #0e3a59; }
+.s-card.is-dark h4 { color: #ffa04d; }
+.s-card.is-dark li { color: #fff; }
+.s-compare .s-card h4 { font-size: 2cqw; color: var(--navy); }
+.s-compare .s-card li { font-size: 1.7cqw; }
+
+.s-stats.cols-1 { grid-template-columns: 1fr; }
+.s-stats.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.s-stats.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.s-stat { display: flex; flex-direction: column; justify-content: center; padding: 1.4cqw 2cqw; background: #fff; border: 1px solid #d9e1e7; border-radius: 0.9cqw; min-height: 0; }
+.s-stat p { margin: 0; }
+.s-stat .value { font-size: 4.4cqw; line-height: 1.1; font-weight: 800; color: #f57c00; }
+.s-stat .value small { font-size: 1.8cqw; font-weight: 800; margin-left: 0.4cqw; }
+.s-stat .label { margin-top: 0.6cqw; font-size: 1.65cqw; font-weight: 800; }
+.s-stat .note { margin-top: 0.3cqw; font-size: 1.3cqw; color: #5b7b8f; }
+
+.s-timeline { display: flex; flex-direction: column; gap: 1.2cqw; }
+.s-row { display: grid; grid-template-columns: 12cqw 1fr; gap: 2.2cqw; align-items: start; padding: 1.5cqw 2cqw; background: #fff; border: 1px solid #d9e1e7; border-radius: 0.9cqw; }
+.s-row.is-now { background: #edf3f8; }
+.s-row .period { display: block; padding: 0.5cqw 0; text-align: center; border-radius: 0.5cqw; background: #5b7b8f; color: #fff; font-size: 1.35cqw; font-weight: 800; }
+.s-row.is-now .period { background: #0e3a59; }
+.s-row h4 { margin: 0 0 0.5cqw; font-size: 1.9cqw; font-weight: 800; }
+
+.s-bullets { min-height: 19cqw; padding: 2.2cqw 3cqw; background: #fff; border: 1px solid #d9e1e7; border-left: 0.6cqw solid #f57c00; border-radius: 0.9cqw; }
+.s-bullets li { font-size: 2.2cqw; line-height: 1.8; margin-bottom: 0.8cqw; }
+
+.layout-cover { background: #0a2a41; color: #fff; justify-content: center; gap: 0; padding: 4.2cqw 5cqw; }
+.layout-cover::before { content: ''; position: absolute; right: -9cqw; top: -22cqw; width: 48cqw; height: 48cqw; border-radius: 50%; background: rgba(27, 94, 122, 0.55); }
+.layout-cover::after { content: ''; position: absolute; right: -4cqw; bottom: -14cqw; width: 28cqw; height: 28cqw; border-radius: 50%; background: rgba(245, 124, 0, 0.18); }
+.layout-cover > * { position: relative; z-index: 1; }
+.layout-cover .s-eyebrow { margin: 0 0 1.6cqw; font-size: 1.3cqw; color: #a9bfcc; }
+.layout-cover .s-title { color: #fff; font-size: 3.8cqw; max-width: 70cqw; }
+.layout-cover .accent { display: block; color: #ffa04d; }
+.layout-cover .s-lead { margin: 2.2cqw 0 0; font-size: 1.6cqw; color: #c9d6df; }
+.layout-cover .s-rule { display: block; width: 22cqw; height: 0.25cqw; margin: 3cqw 0 2.2cqw; background: #f57c00; }
+.layout-cover .s-presenter { margin: 0; font-size: 2.1cqw; font-weight: 800; }
+.layout-cover .s-byline { margin: 0.6cqw 0 0; font-size: 1.25cqw; color: #a9bfcc; }
+
 .slide-notes { margin: 10px 4px 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
 .slide-notes b { color: var(--ink); }
-@media (max-width: 640px) {
-  .slide { min-height: 0; padding: 20px 18px 30px; }
-  .slide h3 { font-size: 17px; }
-}
 
 /* ---------- サンプル入力(デモ) ---------- */
 

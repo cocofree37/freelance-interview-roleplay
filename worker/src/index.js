@@ -112,23 +112,49 @@ const OUTPUT_SCHEMAS = {
   },
   slides: {
     type: 'object',
-    description: '面談用スライド。画面共有で使う5〜8枚の構成案。',
+    description: '面談用スライド。画面共有で使う6〜8枚。ページごとにレイアウトを選び、図解的に見せる。',
     properties: {
+      presenter: { type: 'string', description: '発表者の氏名(屋号があれば併記)。資料から分からなければ空文字。' },
       pages: {
         type: 'array',
-        description: 'スライドを1枚ずつ、使う順に並べる。',
+        description: 'スライドを1枚ずつ、使う順に並べる。1枚目は cover。',
         items: {
           type: 'object',
           properties: {
-            title: { type: 'string', description: 'スライドの見出し。結論が分かる短い一文。' },
-            bullets: Object.assign({ description: '画面に載せる箇条書き。1〜4項目、1項目は40字以内の体言止めや短い文。' }, STRING_LIST),
+            layout: {
+              type: 'string',
+              enum: ['cover', 'cards', 'stats', 'timeline', 'compare', 'bullets'],
+              description: 'cover=表紙 / cards=2〜4列のカード(見出し+箇条書き) / stats=数字カード3〜6枚 / timeline=期間つきの経歴行2〜4行 / compare=左右2枚(右が強調)の比較 / bullets=大きな箇条書き'
+            },
+            eyebrow: { type: 'string', description: 'cover のみ。宛先(例: 「〇〇株式会社 御中」)。案件文から社名が分からなければ空文字。' },
+            title: { type: 'string', description: 'スライドの見出し。結論が分かる25字前後の一文。cover では見出しの前半。' },
+            title_accent: { type: 'string', description: 'cover のみ。見出しの後半(オレンジで強調する部分)。' },
+            lead: { type: 'string', description: '見出しの下に置く補足1行(40字以内)。cover では副題。不要なら空文字。' },
+            byline: { type: 'string', description: 'cover のみ。肩書・所属・日付を1行で(例: 「Web制作／個人事業主　2026年11月」)。資料にある事実だけ。' },
+            sections: {
+              type: 'array',
+              description: 'cards / stats / timeline / compare で使う要素。compare は必ず2つ(左=これまで・現状、右=今回提供できること)。',
+              items: {
+                type: 'object',
+                properties: {
+                  period: { type: 'string', description: 'timeline のみ。期間(例: 「2019〜現在」)。' },
+                  heading: { type: 'string', description: 'カードの見出し。stats では数字の説明(ラベル)。' },
+                  value: { type: 'string', description: 'stats のみ。数字(例: 「14」「3,000」)。' },
+                  unit: { type: 'string', description: 'stats のみ。単位(例: 「社」「年」)。' },
+                  bullets: Object.assign({ description: '箇条書き。2〜3項目(多くても4項目)、1項目は26字以内(列が多いほど短く)。stats では注記を0〜1項目(20字以内)。' }, STRING_LIST)
+                },
+                required: ['heading', 'bullets']
+              }
+            },
+            bullets: Object.assign({ description: 'bullets レイアウトのみ。1〜5項目、1項目は40字以内。' }, STRING_LIST),
+            message: { type: 'string', description: 'スライド下部の帯に置く、この1枚の結論の一言(40字以内)。不要なら空文字。' },
             notes: { type: 'string', description: '話すこと(発表者メモ)。敬体で2〜3文。画面に載せない補足や数字の根拠を入れる。' }
           },
-          required: ['title', 'bullets', 'notes']
+          required: ['layout', 'title', 'notes']
         }
       }
     },
-    required: ['pages']
+    required: ['presenter', 'pages']
   }
 };
 
@@ -190,13 +216,15 @@ answers に、応募フォームの項目ごとの回答を作成する。
 - scripts: 答え方が重要な質問(最大4つ)について、回答の骨子を作る。「結論 → 進め方 → 根拠」の順。読み上げる台本ではなく、話す順番の骨子にする。根拠は応募者の情報にある事実だけを使い、無い場合は「[ここに実績を記入]」とする。`,
 
   slides: `## slides(面談用スライド)
-面談(主にオンライン)で画面共有しながら使う、5〜8枚のスライドの構成案を pages に作る。使う順に並べる。
-- 基本の流れ: ①表紙と自己紹介(氏名・肩書・案件への一言)/ ②案件の理解(課題とニーズを、募集文から読み取れた範囲で)/ ③関連する実績(数字を入れる)/ ④進め方と最初の動き(案件に合わせた具体的な段取り)/ ⑤稼働・条件(応募者の希望条件が資料にあれば、数字で即答できる形で。案件との食い違いは隠さず、相談の形で)/ ⑥確認させてください(募集文から読み取れない点・曖昧な点を、「〜と理解しましたが、合っていますか」の形で3〜5個)/ ⑦次のステップ。案件に合わせて枚数や順序は調整してよい。
-- title: スライドの見出し。何が言いたいスライドか分かる、短い一文にする。
-- bullets: 画面に載せる箇条書き。1〜4項目、1項目は40字以内。読み上げではなく、目で追える短さにする。
+面談(主にオンライン)で画面共有しながら使う、6〜8枚のスライドを作る。文字の羅列ではなく、カード・数字・時系列・左右比較で図解的に見せる。
+- 構成の基本(案件に合わせて枚数・順序は調整してよい):
+  ①表紙(cover) / ②案件の理解(cards: 課題やニーズを2〜3列に分ける) / ③関連する実績(stats: 資料に数字があるときだけ。無ければ cards) / ④これまでの経歴や立ち位置(timeline、または compare: 左=これまでの立ち位置、右=今回お手伝いできること) / ⑤進め方と最初の動き(cards: 3ステップなど) / ⑥稼働・条件(cards か bullets。応募者の希望条件が資料にあれば数字で即答できる形に。案件との食い違いは隠さず、相談の形で) / ⑦確認させてください(cards か bullets。募集文から読み取れない点を「〜と理解しましたが、合っていますか」の形で3〜5個) / ⑧次のステップ(bullets)
+- レイアウトの使い分け: 同じレイアウトを3枚以上続けない。stats は数字が資料にある場合だけ使う(数字を作らない)。compare の sections は必ず2つ。cards は2〜4列。timeline は2〜4行。
+- 各スライドの書き方: title は結論が分かる25字前後の一文。lead は補足1行(40字以内、不要なら空文字)。message は、その1枚の結論を言い切る一言(40字以内。cover 以外のほとんどのスライドに付ける)。箇条書きは1項目26字以内、体言止めや短い文。カードの中は2〜3項目に絞る。
+- cover: eyebrow に宛先(案件文から社名が分かれば「〇〇 御中」、分からなければ空文字)、title に見出しの前半、title_accent に後半(強調したい部分)、lead に副題、byline に肩書・所属と日付(日付は本日の日付から「2026年11月」の形)。presenter は応募者の氏名(分からなければ空文字)。
 - notes: そのスライドで話すこと。敬体で2〜3文。画面に載せない補足や、数字の根拠を入れる。
-- 応募者の実績・数字・社名は、<applicant_profile> に書かれた事実だけを使う。無い場合は「[ここに実績を記入]」のようなプレースホルダーにする。応募者の情報が無いときは、②④⑥を中心に作り、③は枠だけにする。
-- 案件内容に既に書かれていることを、⑥で聞き直さない。`
+- 応募者の実績・数字・社名は、<applicant_profile> に書かれた事実だけを使う。無い場合は「[ここに実績を記入]」のようなプレースホルダーにする。応募者の情報が無いときは、②④⑤⑦を中心に作り、③は枠だけの cards にする。
+- 案件内容に既に書かれていることを、⑦で聞き直さない。案件文に無い具体例は挙げない。`
 };
 
 class HttpError extends Error {
@@ -429,8 +457,18 @@ function isValidResult(input, outputs) {
         && isList(v.gaps) && v.gaps.every(function(g) { return g && isText(g.point) && isText(g.advice); })
         && isList(v.scripts) && v.scripts.every(function(sc) { return sc && isText(sc.question) && isTextList(sc.outline); });
     }
-    return isList(v.pages) && v.pages.length > 0
-      && v.pages.every(function(g) { return g && isText(g.title) && isTextList(g.bullets) && g.bullets.length > 0; });
+    const LAYOUTS = ['cover', 'cards', 'stats', 'timeline', 'compare', 'bullets'];
+    return typeof v.presenter === 'string' && isList(v.pages) && v.pages.length > 0
+      && v.pages.every(function(g) {
+        if (!g || LAYOUTS.indexOf(g.layout) === -1 || !isText(g.title)) return false;
+        if (g.layout === 'cover') return true;
+        if (g.layout === 'bullets') return isTextList(g.bullets) && g.bullets.length > 0;
+        if (!isList(g.sections) || g.sections.length === 0) return false;
+        if (g.layout === 'compare' && g.sections.length !== 2) return false;
+        return g.sections.every(function(x) {
+          return x && isText(x.heading) && isTextList(x.bullets) && (g.layout !== 'stats' || isText(x.value));
+        });
+      });
   });
 }
 
