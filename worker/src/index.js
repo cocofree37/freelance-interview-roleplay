@@ -167,6 +167,7 @@ const COMMON_RULES = `あなたは、フリーランス・複業の案件応募�
 1. 事実だけを書く
 - 応募者の実績・数値・スキル・社名は、<applicant_profile>(と <clarification_answers>)に書かれたものだけを使う。推測で補わない。応募者が持っていない経験を、あるかのように書かない。
 - 本文に書いてよいか確信が持てない事実(経験の有無や担当範囲が曖昧、数字が資料内で食い違う、社名を公開してよいか不明)は、本文に断定して書かず、confirmations に質問として出す。数字が食い違うときは、確実に言える合計などだけを書き、内訳は書かない。
+- 言い換えで事実を強めない。資料の表現を超えて、「フルタイム」「多数」「全般」などと拡大しない(例: 「平日9時〜18時に稼働可能」を「フルタイムで稼働」と書かない)。経験年数は、資料に年数が書かれていればその数字を使い、開始年から数えるときは本日の日付を基準にする。
 2. 募集要件に正面から応える
 - 必須要件・歓迎要件のそれぞれに、応募者の事実で答える。満たす人が最も少ない要件(複数の領域をまたぐ実務、継続している取引の数字など)を先頭に置く。
 - 経験が足りない要件は、事実を偽らず、近い実績で橋渡しする。「経験がない」と明記する一文は本文に入れず、confirmations の question に「入れる場合の文面」を添えて提案する。
@@ -199,7 +200,7 @@ answers に、応募フォームの項目ごとの回答を作成する。
 - <form_items> がある場合: 項目と同じ順に、1項目につき1つの回答を作る。label には項目名をそのまま入れる(長い場合は先頭の30〜40字に要約する)。文字数の上限が示されている項目は、改行を含めて上限の95%以内に収める。選択式の自己評価(経験レベルなど)の項目は、選択肢の推奨とその根拠を書き、すべてを最上位にしない(面談で深掘りされても答えられる水準にする)。
 - <form_items> が無い場合: label を「応募文」として1つだけ作る。構成は、挨拶と感謝 → 案件の課題・ニーズの理解 → 関連する実績(数字を入れる)→ 進め方 → 期待できる成果 → 次のステップと結び。
 - 項目どうしで実績が重複しないように役割を分ける(例: 要件への経験は事実と数字、意気込みは案件への理解と姿勢)。必須要件を先に、歓迎要件はその後に扱う。
-- 氏名が分かる場合は応募文の署名に使い、分からない場合は「[氏名]」とする。確認できていない事実は、「[具体的な実績を記入してください]」のようなプレースホルダーにするか、書かない。`,
+- 氏名が分かる場合は、<form_items> が無いときの応募文の署名にだけ使う(フォームの項目への回答には署名を付けない)。分からない場合は「[氏名]」とする。確認できていない事実は、「[具体的な実績を記入してください]」のようなプレースホルダーにするか、書かない。`,
 
   interview: `## interview(面談資料)
 面談で実際に聞かれそうな質問と、準備事項を作る。
@@ -378,7 +379,7 @@ function buildTool(outputs) {
 }
 
 function buildSystem(outputs) {
-  return COMMON_RULES + '\n\n作成するもの: assessment, confirmations, ' + outputs.join(', ') + '\n\n'
+  return COMMON_RULES + '\n\n本日の日付: ' + jstDay() + '(日本時間)\n\n作成するもの: assessment, confirmations, ' + outputs.join(', ') + '\n\n'
     + COMMON_SECTION_PROMPTS + '\n\n'
     + outputs.map(function(k) { return SECTION_PROMPTS[k]; }).join('\n\n');
 }
@@ -405,7 +406,58 @@ function buildUserContent(jobText, applicantText, extras) {
   return content;
 }
 
-async function callClaude(env, outputs, jobText, applicantText, extras) {
+// モデルが、配列やオブジェクトを JSON の文字列として返すことがあるため、スキーマに沿って戻す
+function coerce(value, schema) {
+  if (!schema) return value;
+  if ((schema.type === 'array' || schema.type === 'object') && typeof value === 'string') {
+    try { value = JSON.parse(value); } catch (e) { return value; }
+  }
+  if (schema.type === 'object' && value && typeof value === 'object' && schema.properties) {
+    Object.keys(schema.properties).forEach(function(k) {
+      if (k in value) value[k] = coerce(value[k], schema.properties[k]);
+    });
+  } else if (schema.type === 'array' && Array.isArray(value) && schema.items) {
+    value = value.map(function(v) { return coerce(v, schema.items); });
+  }
+  return value;
+}
+
+function isText(v) { return typeof v === 'string' && v.trim().length > 0; }
+function isList(v) { return Array.isArray(v); }
+function isTextList(v) { return Array.isArray(v) && v.every(function(x) { return typeof x === 'string'; }); }
+
+// 出力の形が仕様どおりかを確認する。崩れていると利用者の画面が空になるため、ここで弾く
+function isValidResult(input, outputs) {
+  const a = input.assessment;
+  if (!a || typeof a !== 'object' || ['応募推奨', '条件次第', '見送り推奨'].indexOf(a.verdict) === -1
+    || !isText(a.summary) || !isTextList(a.strengths) || !isTextList(a.concerns)) return false;
+  if (!isList(input.confirmations) || !input.confirmations.every(function(c) { return c && isText(c.question); })) return false;
+
+  return outputs.every(function(k) {
+    const v = input[k];
+    if (!v || typeof v !== 'object') return false;
+    if (k === 'proposal') {
+      return isList(v.answers) && v.answers.length > 0
+        && v.answers.every(function(x) { return x && isText(x.label) && isText(x.text); });
+    }
+    if (k === 'interview') {
+      return isList(v.categories) && v.categories.length > 0
+        && v.categories.every(function(c) { return c && isText(c.title) && isTextList(c.questions) && c.questions.length > 0 && isTextList(c.tips); })
+        && isList(v.gaps) && v.gaps.every(function(g) { return g && isText(g.point) && isText(g.advice); })
+        && isList(v.scripts) && v.scripts.every(function(sc) { return sc && isText(sc.question) && isTextList(sc.outline); });
+    }
+    return isList(v.ask) && v.ask.length > 0
+      && v.ask.every(function(g) {
+        return g && isText(g.topic) && isList(g.questions) && g.questions.length > 0
+          && g.questions.every(function(q) { return q && isText(q.question); });
+      })
+      && isList(v.talk) && v.talk.length > 0
+      && v.talk.every(function(g) { return g && isText(g.topic) && isTextList(g.points); });
+  });
+}
+
+async function callClaudeOnce(env, outputs, jobText, applicantText, extras) {
+  const tool = buildTool(outputs);
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -418,39 +470,43 @@ async function callClaude(env, outputs, jobText, applicantText, extras) {
       max_tokens: 10000,
       system: buildSystem(outputs),
       messages: [{ role: 'user', content: buildUserContent(jobText, applicantText, extras) }],
-      tools: [buildTool(outputs)],
+      tools: [tool],
       tool_choice: { type: 'tool', name: 'output_documents' }
     })
   });
 
   if (!res.ok) {
     console.error('Claude API error', res.status, await res.text());
-    throw new HttpError(502, 'AIの呼び出しに失敗しました。時間をおいて再度お試しください');
+    return { retryable: res.status === 429 || res.status >= 500 };
   }
 
   const data = await res.json();
   const toolUse = (data.content || []).find(function(b) { return b.type === 'tool_use'; });
-  if (!toolUse || !toolUse.input) throw new HttpError(502, 'AIから結果を取得できませんでした');
-  const input = toolUse.input;
+  if (!toolUse || !toolUse.input) return { retryable: true };
 
-  const fail = function() { throw new HttpError(502, '作成に失敗しました。もう一度お試しください'); };
-  if (!input.assessment || typeof input.assessment !== 'object') fail();
+  const input = coerce(toolUse.input, tool.input_schema);
+  if (!isValidResult(input, outputs)) {
+    console.error('Claude output did not match the expected shape', JSON.stringify(Object.keys(toolUse.input)));
+    return { retryable: true };
+  }
+  return { input: input };
+}
+
+// 形が崩れたとき、または一時的なエラーのときは、1回だけ自動でやり直す
+async function callClaude(env, outputs, jobText, applicantText, extras) {
+  let last;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    last = await callClaudeOnce(env, outputs, jobText, applicantText, extras);
+    if (last.input || !last.retryable) break;
+  }
+  if (!last.input) throw new HttpError(502, 'AIの呼び出しに失敗しました。時間をおいて再度お試しください');
 
   const result = {};
-  outputs.forEach(function(k) {
-    const v = input[k];
-    if (v === undefined || v === null || v === '') fail();
-    result[k] = v;
-  });
-  if (result.proposal) {
-    const a = result.proposal.answers;
-    if (!Array.isArray(a) || !a.length || a.some(function(x) { return !x || !String(x.text || '').trim(); })) fail();
-  }
-
+  outputs.forEach(function(k) { result[k] = last.input[k]; });
   return {
     outputs: result,
-    assessment: input.assessment,
-    confirmations: Array.isArray(input.confirmations) ? input.confirmations.slice(0, MAX_ANSWERS) : []
+    assessment: last.input.assessment,
+    confirmations: last.input.confirmations.slice(0, MAX_ANSWERS)
   };
 }
 
